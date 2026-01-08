@@ -1,0 +1,62 @@
+name: Bug Report
+description: Report a bug in claude-cook
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: What happened?
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this?
+      placeholder: |
+        1. Run `/cook ...`
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Cooking Mode
+      options:
+        - well-done
+        - microwave
+        - Both
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: artifact
+    attributes:
+      label: Generated Artifact
+      description: If applicable, paste the generated cook artifact
+      render: markdown
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information

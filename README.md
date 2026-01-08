@@ -1,0 +1,174 @@
+# claude-cook
+
+A Claude Code custom command that enforces a disciplined, multi-phase development workflow. Think of it as preparing a dish: ingredients must be fresh, cooking must be thorough, and plating must be precise.
+
+`/cook` prevents shipping raw code by requiring structured planning, review phases, and documented decisions before implementation begins.
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/PJuniszewski/claude-cook.git
+
+# Copy to your Claude Code configuration
+cp -r claude-cook/.claude/commands ~/.claude/
+cp -r claude-cook/.claude/skills ~/.claude/
+cp -r claude-cook/.claude/templates ~/.claude/
+cp -r claude-cook/.claude/agents ~/.claude/
+```
+
+Or copy individual files:
+
+```bash
+# Minimum required
+cp claude-cook/.claude/commands/cook.md ~/.claude/commands/
+cp -r claude-cook/.claude/skills/feature-development ~/.claude/skills/
+```
+
+## Usage
+
+### Well-Done Mode (default)
+
+Full governance cooking with all review phases:
+
+```
+/cook Add SSE streaming blocks --well-done
+/cook Add user authentication with OAuth
+/cook Implement real-time notifications
+```
+
+### Microwave Mode
+
+Speed-optimized for low-risk changes:
+
+```
+/cook Fix crash in SettingsActivity --microwave
+/cook Fix null pointer in payment handler --microwave
+/cook Update error message text --microwave
+```
+
+## What It Generates
+
+Each `/cook` run produces an artifact in `cook/<slug>.<date>.cook.md`:
+
+```markdown
+# Cooking Result
+
+## Dish
+Add SSE streaming for real-time updates
+
+## Status
+well-done
+
+## Cooking Mode
+well-done
+
+## Ownership
+- Decision Owner: @engineer
+- Reviewers: auto
+- Approved by: Product on 2026-01-07
+
+## Product Decision
+Approved
+- Reason: Aligns with Q1 real-time features roadmap
+
+## Pre-mortem
+1. Connection drops silently → mitigation: heartbeat + reconnect logic
+2. Memory leak from unclosed streams → mitigation: cleanup on unmount
+3. Server overload from many connections → mitigation: connection pooling
+
+## Patch Plan
+- Files to modify:
+  1. src/api/streaming.ts - new SSE client
+  2. src/hooks/useStream.ts - React hook wrapper
+- Tests to run: streaming.test.ts, integration/sse.test.ts
+```
+
+## Microwave Blockers
+
+These topics **automatically escalate** to `--well-done`:
+
+| Topic | Reason |
+|-------|--------|
+| auth / permissions / crypto | Security-critical |
+| schema / migrations / storage | Data integrity risk |
+| public API contracts | Breaking change risk |
+| UI flow changes | UX impact |
+| payments / purchase / paywall | Financial/compliance risk |
+
+## Cooking Statuses
+
+| Status | Meaning |
+|--------|---------|
+| `raw` | Requested, not evaluated |
+| `cooking` | In progress |
+| `blocked` | Blocker identified |
+| `needs-more-cooking` | Rejected or incomplete |
+| `well-done` | Approved, ready to implement |
+| `ready-for-merge` | Post QA/Security |
+| `plated` | Shipped |
+
+## Customizing Agents (Chefs)
+
+Create project-specific chefs in `.claude/agents/`:
+
+```
+.claude/agents/
+  product_chef.md    # Scope decisions
+  ux_chef.md         # UX review
+  qa_chef.md         # Test planning
+  security_chef.md   # Security audit
+```
+
+Project chefs override system-wide defaults. See `.claude/agents/README.md` for details.
+
+## Tips for Best Results
+
+`/cook` extracts project context during Phase 0. The more context available, the better the output.
+
+**Recommended project setup:**
+
+| File | Purpose |
+|------|---------|
+| `CLAUDE.md` | Project rules, constraints, conventions |
+| `README.md` | Project overview, architecture summary |
+| `docs/` | Architecture decisions, API specs, ADRs |
+| `.claude/agents/` | Project-specific review chefs |
+
+**In your `CLAUDE.md`, consider documenting:**
+
+- Tech stack and versions
+- Coding conventions and style
+- Security requirements
+- Testing expectations
+- Forbidden patterns or deprecated approaches
+- Team-specific workflows
+
+**Example `CLAUDE.md`:**
+
+```markdown
+# Project Rules
+
+## Stack
+- TypeScript 5.x, React 18, Node 20
+- PostgreSQL with Prisma ORM
+
+## Conventions
+- Functional components only
+- No default exports
+- All API routes require authentication
+
+## Security
+- No secrets in code
+- All user input must be validated with zod
+
+## Testing
+- Unit tests required for business logic
+- E2E tests for critical user flows
+```
+
+The more explicit your project documentation, the more accurate `/cook` will be at detecting conflicts, assessing risk, and generating relevant review checklists.
+
+## License
+
+MIT License. See [LICENSE](LICENSE).
