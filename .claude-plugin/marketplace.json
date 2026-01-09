@@ -1,0 +1,28 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-cook",
+  "description": "Structured multi-phase development workflow plugin for Claude Code",
+  "owner": {
+    "name": "Patryk Juniszewski",
+    "email": "p.juniszewski@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "cook",
+      "source": "./",
+      "description": "Enforces disciplined feature development with /cook command. Includes product, UX, QA, and security review phases.",
+      "version": "1.0.0",
+      "category": "development",
+      "author": {
+        "name": "Patryk Juniszewski"
+      },
+      "keywords": [
+        "workflow",
+        "development",
+        "planning",
+        "review",
+        "governance"
+      ]
+    }
+  ]
+}

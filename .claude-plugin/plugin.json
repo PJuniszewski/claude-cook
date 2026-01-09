@@ -1,0 +1,25 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "cook",
+  "version": "1.0.0",
+  "description": "Structured multi-phase development workflow with /cook command. Enforces disciplined feature development with product, UX, QA, and security review gates.",
+  "author": {
+    "name": "Patryk Juniszewski",
+    "email": "p.juniszewski@gmail.com"
+  },
+  "repository": "https://github.com/PJuniszewski/claude-cook",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "development",
+    "planning",
+    "review",
+    "governance",
+    "feature-development"
+  ],
+  "components": {
+    "commands": "../commands",
+    "skills": "../skills",
+    "agents": "../agents"
+  }
+}
