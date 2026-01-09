@@ -52,3 +52,34 @@ Approved / Rejected / Deferred
 | Technical debt reduction | Medium |
 | Nice-to-have enhancement | Low |
 | Scope creep indicator | Negative |
+
+## User Value Statement
+
+For each approved feature, document:
+
+```markdown
+## User Value
+- **Who**: <target user>
+- **Problem**: <what pain point>
+- **Solution**: <how this helps>
+- **Success metric**: <how we measure>
+```
+
+## Non-goals
+
+Explicitly state what this feature will NOT do:
+- Prevents scope creep
+- Sets clear boundaries
+- Manages expectations
+
+## Artifacts
+
+- Section in cook artifact: "Product Decision", "Scope"
+- Optional: User story format for complex features
+
+## Heuristics
+
+1. **User value first** - no value = no feature
+2. **Explicit non-goals** - say what you won't do
+3. **Measurable success** - if you can't measure it, reconsider
+4. **Smaller is better** - scope down aggressively
