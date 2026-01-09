@@ -77,3 +77,37 @@ These topics always require full security review (auto-escalate from microwave):
 - [ ] Insecure Deserialization
 - [ ] Using Components with Known Vulnerabilities
 - [ ] Insufficient Logging and Monitoring
+
+## Threat Modeling (Lite)
+
+For security-sensitive features, briefly assess:
+
+```markdown
+## Threat Assessment
+### Assets at Risk
+- <what data/system is vulnerable>
+
+### Threat Actors
+- <who might exploit this>
+
+### Attack Vectors
+- <how they might attack>
+
+### Mitigations
+- <how we prevent/detect>
+```
+
+## Artifacts
+
+- Section in cook artifact: "Security Status"
+- Optional: `SECURITY_NOTES.md` for complex security changes with:
+  - Detailed threat model
+  - Dependency audit results
+  - Penetration test notes
+
+## Heuristics
+
+1. **Assume hostile input** - never trust user data
+2. **Least privilege** - minimal permissions needed
+3. **Defense in depth** - multiple layers of protection
+4. **Fail secure** - errors should not expose data

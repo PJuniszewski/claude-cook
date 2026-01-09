@@ -63,3 +63,28 @@ Contributes to the artifact:
 
 **Well-done mode**: 3+ test cases
 **Microwave mode**: 1-2 test cases
+
+## Acceptance Criteria
+
+For each feature, define:
+```markdown
+## Acceptance Criteria
+- [ ] Given <context>, when <action>, then <result>
+- [ ] Given <context>, when <action>, then <result>
+```
+
+## Artifacts
+
+- Section in cook artifact: "QA Plan", "QA Status"
+- Optional: `TEST_PLAN.md` for complex features with:
+  - Test matrix
+  - Manual test scenarios
+  - Automated test requirements
+  - Performance benchmarks (if applicable)
+
+## Heuristics
+
+1. **Cover the happy path first** - most common user flow
+2. **Boundaries matter** - 0, 1, max, max+1
+3. **Error states are features** - test them explicitly
+4. **Regression = trust** - always check what might break
