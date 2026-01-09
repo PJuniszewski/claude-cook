@@ -24,6 +24,86 @@ Every dish must be properly prepared before serving.
 - **mode** (enum: well-done | microwave, default: well-done)
   Determines cooking thoroughness and review phases.
 
+- **dry-run** (boolean, default: false)
+  Preview mode - shows what would happen without executing.
+
+---
+
+## Dry-Run Mode
+
+Use `--dry-run` to preview the cooking process without producing artifacts.
+
+```
+/cook <feature> --dry-run
+```
+
+### What dry-run does
+
+1. **Checks prerequisites**
+   - Is CLAUDE.md present?
+   - Are project-specific chefs configured?
+   - Which system chefs will be used as fallback?
+
+2. **Shows cooking plan**
+   - Lists all phases that would execute
+   - Shows which chefs will be consulted
+   - Identifies microwave blockers (if applicable)
+
+3. **Validates inputs**
+   - Parses feature description
+   - Checks for instruction file (if specified)
+   - Identifies potential issues early
+
+### Dry-run output
+
+```markdown
+# Dry-Run: /cook preview
+
+## Feature
+<parsed feature description>
+
+## Mode
+well-done | microwave
+
+## Prerequisites Check
+- CLAUDE.md: found | NOT FOUND (will use defaults)
+- Project chefs: <list> | none (will use system chefs)
+- System chefs available: <list>
+
+## Cooking Plan
+1. Phase 0 - Project Policy & Context
+   - Chef: <project or system>
+2. Step 1 - Read the Order
+3. Step 2 - Ingredient Approval (well-done only)
+   - Chef: product_chef
+4. Step 3 - Presentation Planning (if UI changes)
+   - Chef: ux_chef
+5. Step 4 - Cooking
+   - Chef: engineer_chef, architect_chef
+6. Step 5 - Taste Testing
+   - Chef: qa_chef
+7. Step 6 - Safety Inspection
+   - Chef: security_chef
+8. Step 7 - Recipe Notes (if needed)
+   - Chef: docs_chef
+
+## Microwave Blockers (if --microwave)
+- <blocker topics detected> | none
+
+## Potential Issues
+- <early warnings> | none detected
+
+## Ready to Cook
+yes | no (reason: <why>)
+```
+
+### When to use dry-run
+
+- First time using `/cook` on a project
+- Verifying chef configuration
+- Checking if microwave mode is allowed
+- Understanding what phases will run
+
 ---
 
 ## Cooking Modes
