@@ -6,6 +6,24 @@ A Claude Code custom command that enforces a disciplined, multi-phase developmen
 
 ## Installation
 
+### Option 1: Plugin Marketplace (Recommended)
+
+```bash
+# Add the marketplace
+/plugin marketplace add PJuniszewski/claude-cook
+
+# Install the plugin
+/plugin install cook@claude-cook
+```
+
+If you have trouble with the short form, use the full URL:
+
+```bash
+/plugin marketplace add https://github.com/PJuniszewski/claude-cook.git
+```
+
+### Option 2: Manual Installation
+
 ```bash
 # Clone the repository
 git clone https://github.com/PJuniszewski/claude-cook.git
@@ -23,6 +41,16 @@ Or copy individual files:
 # Minimum required
 cp claude-cook/.claude/commands/cook.md ~/.claude/commands/
 cp -r claude-cook/.claude/skills/feature-development ~/.claude/skills/
+```
+
+### Verify Installation
+
+```bash
+# Check available commands
+/help
+
+# Test the command
+/cook Add a simple feature --dry-run
 ```
 
 ## Usage
