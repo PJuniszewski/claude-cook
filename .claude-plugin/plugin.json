@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "cook",
   "version": "1.0.0",
-  "description": "Structured multi-phase development workflow with /cook command. Enforces disciplined feature development with product, UX, QA, and security review gates.",
+  "description": "Feature development with guardrails. Plan → Review → Code → Ship.",
   "author": {
     "name": "Patryk Juniszewski",
     "email": "p.juniszewski@gmail.com"
