@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Todo App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Todo List</h1>
+        <p class="subtitle">Sample app for testing /cook</p>
+
+        <div class="input-group">
+            <input
+                type="text"
+                id="task-input"
+                placeholder="What needs to be done?"
+                autocomplete="off"
+            >
+            <button id="add-btn" class="btn-primary">Add</button>
+        </div>
+
+        <div class="stats">
+            <span id="task-count">0 tasks</span>
+            <span id="completed-count">0 completed</span>
+        </div>
+
+        <ul id="task-list"></ul>
+
+        <div class="footer">
+            <button id="clear-completed" class="btn-secondary">Clear Completed</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
