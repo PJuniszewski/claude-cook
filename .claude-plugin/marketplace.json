@@ -10,7 +10,7 @@
     {
       "name": "cook",
       "source": "./",
-      "description": "Enforces disciplined feature development with /cook command. Includes product, UX, QA, and security review phases.",
+      "description": "Feature development with guardrails. Plan → Review → Code → Ship.",
       "version": "1.0.0",
       "category": "development",
       "author": {
