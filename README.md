@@ -169,6 +169,31 @@ Project chefs override system-wide defaults. See `.claude/agents/README.md` for 
 
 The more explicit your project documentation, the more accurate `/cook` will be at detecting conflicts, assessing risk, and generating relevant review checklists.
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [CLAUDE.md](CLAUDE.md) | Project rules for this repository (dogfooding example) |
+| [CHEF_MATRIX.md](CHEF_MATRIX.md) | Who does what - chef responsibilities and phases |
+| [COOK_CONTRACT.md](COOK_CONTRACT.md) | Required sections for valid cook artifacts |
+| [ANTI_PATTERNS.md](ANTI_PATTERNS.md) | What `/cook` is NOT - common misuses |
+| [COMPARISON.md](COMPARISON.md) | `/cook` vs prompt spaghetti - when to use what |
+| [examples/quickstart/](examples/quickstart/) | Full walkthrough from request to artifact |
+
+## Preview Mode
+
+Use `--dry-run` to see what `/cook` will do without executing:
+
+```
+/cook Add feature X --dry-run
+```
+
+Shows:
+- Which chefs will be consulted
+- Which phases will run
+- Whether prerequisites are met
+- Potential blockers
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).
