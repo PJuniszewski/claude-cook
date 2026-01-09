@@ -1,3 +1,8 @@
+---
+description: Feature development with guardrails. Plan → Review → Code → Ship.
+argument-hint: <feature description> [--well-done | --microwave]
+---
+
 # /cook Command Specification
 
 ## Purpose
