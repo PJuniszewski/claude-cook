@@ -1,5 +1,4 @@
 {
-  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "cook",
   "version": "1.0.0",
   "description": "Feature development with guardrails. Plan → Review → Code → Ship.",
@@ -16,10 +15,5 @@
     "review",
     "governance",
     "feature-development"
-  ],
-  "components": {
-    "commands": "../commands",
-    "skills": "../skills",
-    "agents": "../agents"
-  }
+  ]
 }
