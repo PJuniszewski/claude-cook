@@ -1,0 +1,192 @@
+#!/usr/bin/env node
+
+/**
+ * cook-validate - Validate cook artifacts against mode-specific requirements
+ *
+ * Usage:
+ *   ./scripts/cook-validate <file>
+ *   ./scripts/cook-validate <file> --mode well-done
+ *   ./scripts/cook-validate <file> --quiet
+ *   ./scripts/cook-validate <file> --json
+ *
+ * Exit codes:
+ *   0 - Valid (may have warnings)
+ *   1 - Invalid (has errors)
+ *   2 - File not found or parse error
+ */
+
+const path = require('path');
+const { parseArtifact } = require('./lib/artifactParser');
+const { validateArtifact, formatResult, getSeverityCounts } = require('./lib/validator');
+
+// Parse command line arguments
+function parseArgs(argv) {
+  const args = {
+    file: null,
+    mode: null,
+    quiet: false,
+    json: false,
+    verbose: false,
+    help: false,
+    skipChecks: []
+  };
+
+  for (let i = 2; i < argv.length; i++) {
+    const arg = argv[i];
+
+    if (arg === '--help' || arg === '-h') {
+      args.help = true;
+    } else if (arg === '--quiet' || arg === '-q') {
+      args.quiet = true;
+    } else if (arg === '--json') {
+      args.json = true;
+    } else if (arg === '--verbose' || arg === '-v') {
+      args.verbose = true;
+    } else if (arg === '--mode' && argv[i + 1]) {
+      args.mode = argv[++i];
+    } else if (arg === '--skip' && argv[i + 1]) {
+      args.skipChecks.push(argv[++i]);
+    } else if (!arg.startsWith('-')) {
+      args.file = arg;
+    }
+  }
+
+  return args;
+}
+
+// Print usage information
+function printUsage() {
+  console.log(`
+cook-validate - Validate cook artifacts
+
+USAGE:
+  cook-validate <file>                    Validate artifact (auto-detect mode)
+  cook-validate <file> --mode well-done   Force specific mode
+  cook-validate <file> --quiet            Only show on failure
+  cook-validate <file> --json             Output as JSON
+  cook-validate <file> --verbose          Show all checks (including passed)
+
+OPTIONS:
+  --mode MODE       Override mode detection (well-done | microwave)
+  --skip CHECK_ID   Skip specific check (can be repeated)
+  --quiet, -q       Only output on failure
+  --json            Output JSON format
+  --verbose, -v     Show all check results
+  --help, -h        Show this help message
+
+CHECKS:
+  no-scope          Missing In/Out scope (well-done, ERROR)
+  no-premortem      Missing pre-mortem (both, ERROR)
+  thin-premortem    < 3 scenarios (well-done, WARNING)
+  no-alternatives   No rejected alternatives (well-done, WARNING)
+  missing-tests     < 3 test cases (well-done, ERROR)
+  no-rollback       Missing rollback plan (well-done, WARNING)
+  no-owner          No Decision Owner (well-done, ERROR)
+  tbd-sections      Contains "TBD" placeholder (both, ERROR)
+  empty-section     Required section empty (both, ERROR)
+  scope-creep       Out-of-scope in implementation (both, WARNING)
+
+EXIT CODES:
+  0  Valid (no errors, may have warnings)
+  1  Invalid (has errors)
+  2  File error or parse failure
+
+EXAMPLES:
+  cook-validate cook/feature.2026-01-10.cook.md
+  cook-validate cook/fix.cook.md --mode microwave
+  cook-validate cook/feature.cook.md --skip no-alternatives --json
+`);
+}
+
+// Format console output
+function formatConsoleOutput(artifact, result, options = {}) {
+  const lines = [];
+
+  if (!options.quiet) {
+    lines.push(`Validating: ${artifact.filename}`);
+    lines.push(`Mode: ${result.mode}`);
+    lines.push('');
+  }
+
+  for (const check of result.results) {
+    if (check.passed && !options.verbose) continue;
+
+    const icon = check.passed ? '[PASS]' : (check.severity === 'ERROR' ? '[FAIL]' : '[WARN]');
+    lines.push(`${icon} ${check.message}`);
+
+    if (!check.passed && check.details && options.verbose) {
+      lines.push(`       ${check.details}`);
+    }
+  }
+
+  if (lines.length > 0 && !options.quiet) {
+    lines.push('');
+  }
+
+  const counts = getSeverityCounts(result);
+
+  if (result.valid) {
+    if (counts.warnings > 0) {
+      lines.push(`Result: VALID (${counts.warnings} warning${counts.warnings > 1 ? 's' : ''})`);
+    } else {
+      lines.push('Result: VALID');
+    }
+  } else {
+    lines.push(`Result: INVALID (${counts.errors} error${counts.errors > 1 ? 's' : ''}, ${counts.warnings} warning${counts.warnings > 1 ? 's' : ''})`);
+  }
+
+  return lines.join('\n');
+}
+
+// Main function
+function main() {
+  const args = parseArgs(process.argv);
+
+  if (args.help) {
+    printUsage();
+    process.exit(0);
+  }
+
+  if (!args.file) {
+    console.error('Error: No file specified. Use --help for usage information.');
+    process.exit(2);
+  }
+
+  // Parse artifact
+  let artifact;
+  try {
+    artifact = parseArtifact(args.file);
+  } catch (error) {
+    if (args.json) {
+      console.log(JSON.stringify({ error: error.message }, null, 2));
+    } else {
+      console.error(`Error: ${error.message}`);
+    }
+    process.exit(2);
+  }
+
+  // Validate
+  const result = validateArtifact(artifact, {
+    mode: args.mode,
+    skipChecks: args.skipChecks
+  });
+
+  // Output
+  if (args.json) {
+    console.log(JSON.stringify({
+      file: artifact.filename,
+      path: artifact.path,
+      ...result
+    }, null, 2));
+  } else if (!args.quiet || !result.valid) {
+    console.log(formatConsoleOutput(artifact, result, {
+      quiet: args.quiet,
+      verbose: args.verbose
+    }));
+  }
+
+  // Exit code
+  process.exit(result.valid ? 0 : 1);
+}
+
+main();

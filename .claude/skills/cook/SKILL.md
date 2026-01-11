@@ -1,9 +1,10 @@
 ---
-name: feature-development
-description: Run a full, policy-compliant feature development flow with structured review phases
+name: cook
+description: Feature development with guardrails. Plan → Review → Code → Ship.
+user-invocable: true
 ---
 
-# feature-development skill
+# cook skill
 
 ## Purpose
 Cook features through a structured, multi-phase development flow.
@@ -26,6 +27,70 @@ Every dish must be properly prepared before serving.
 
 - **dry-run** (boolean, default: false)
   Preview mode - shows what would happen without executing.
+
+- **validate** (string, optional)
+  Path to existing artifact to validate without re-cooking.
+  Example: `/cook --validate cook/feature.cook.md`
+
+- **no-validate** (boolean, default: false)
+  Skip auto-validation after artifact generation.
+
+- **interactive** (boolean, default: false)
+  Launch interactive menu for artifact management.
+  Example: `/cook --interactive`
+
+---
+
+## Interactive Mode
+
+Use `--interactive` to launch the artifact management menu:
+
+```
+/cook --interactive
+```
+
+### What Interactive Mode Does
+
+1. **Scans for artifacts** in `cook/*.cook.md`
+2. **Presents a picker** with available artifacts
+3. **Shows action menu**:
+   - Validate artifact
+   - Compare artifacts (diff)
+   - View status summary
+4. **Executes selected action**
+
+### Interactive Flow
+
+```
+/cook --interactive
+   |
+   v
+┌─────────────────────────────────────┐
+│  Select artifact:                   │
+│  > dry-run-validation.2026-01-10    │
+│    user-auth.2026-01-09             │
+│    payment-flow.2026-01-08          │
+└─────────────────────────────────────┘
+   |
+   v
+┌─────────────────────────────────────┐
+│  Select action:                     │
+│  > Validate                         │
+│    Compare with another artifact    │
+│    View status summary              │
+└─────────────────────────────────────┘
+   |
+   v
+[Executes selected action]
+```
+
+### Actions Available
+
+| Action | Description | Command Equivalent |
+|--------|-------------|-------------------|
+| Validate | Run validation checks | `cook-validate <file>` |
+| Compare | Diff two artifacts | `cook-diff <a> <b>` |
+| Status | Show artifact summary | Quick view of status, mode, owner |
 
 ---
 
@@ -605,3 +670,53 @@ While system-wide chefs provide generic best practices, project-specific configu
 Cooking results are stored as decision records:
 - Location: `cook/*.cook.md`
 - Contains: scope decisions, review outcomes, final status
+
+---
+
+## Auto-Validation (Final Step)
+
+After generating the artifact, **automatically run validation**:
+
+```bash
+./scripts/cook-validate cook/<artifact>.cook.md
+```
+
+### Validation Behavior
+
+1. **If VALID** - Report success and proceed
+2. **If INVALID (errors)** - Show issues and offer to fix them
+3. **If WARNINGS only** - Report warnings but consider artifact ready
+
+### Example Output
+
+```
+[cook-validate] Validating artifact...
+
+Validating: user-auth.2026-01-10.cook.md
+Mode: well-done
+
+[PASS] Scope sections present
+[PASS] Pre-mortem (3 scenarios)
+[PASS] Test cases (5 defined)
+[PASS] Ownership assigned
+
+Result: VALID
+
+✓ Artifact ready for implementation
+```
+
+### Skip Validation
+
+Use `--no-validate` to skip auto-validation:
+
+```
+/cook Add feature X --no-validate
+```
+
+### Validation-Only Mode
+
+To validate an existing artifact without re-cooking:
+
+```
+/cook --validate cook/existing-artifact.cook.md
+```
