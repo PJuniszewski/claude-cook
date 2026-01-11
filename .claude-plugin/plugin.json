@@ -8,9 +8,7 @@
   },
   "repository": "https://github.com/PJuniszewski/claude-cook",
   "homepage": "https://github.com/PJuniszewski/claude-cook#readme",
-  "bugs": "https://github.com/PJuniszewski/claude-cook/issues",
   "license": "MIT",
-  "category": "development",
   "keywords": [
     "workflow",
     "development",
