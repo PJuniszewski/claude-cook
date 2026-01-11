@@ -6,23 +6,31 @@ A Claude Code custom command that enforces a disciplined, multi-phase developmen
 
 ## Installation
 
-### Option 1: Plugin Marketplace (Recommended)
+### Option 1: Via Juni-Tools Marketplace (Recommended)
 
 ```bash
 # Add the marketplace
-/plugin marketplace add PJuniszewski/claude-cook
+claude /marketplace add github:PJuniszewski/juni-tools-marketplace
 
-# Install the plugin
-/plugin install cook@claude-cook
+# Install the cook plugin
+claude /plugin install juni-tools:cook
+
+# Enable it
+claude /plugin enable cook
 ```
 
-If you have trouble with the short form, use the full URL:
+### Option 2: Direct Plugin Installation
 
 ```bash
-/plugin marketplace add https://github.com/PJuniszewski/claude-cook.git
+# Add claude-cook as a standalone marketplace
+claude /marketplace add github:PJuniszewski/claude-cook
+
+# Install and enable
+claude /plugin install claude-cook:cook
+claude /plugin enable cook
 ```
 
-### Option 2: Manual Installation
+### Option 3: Manual Installation
 
 ```bash
 # Clone the repository
