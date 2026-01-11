@@ -1,0 +1,306 @@
+#!/usr/bin/env node
+
+/**
+ * cook-menu - Interactive artifact management menu
+ *
+ * Usage: ./scripts/cook-menu
+ *
+ * Provides a terminal UI for:
+ * - Validating artifacts
+ * - Comparing artifacts (diff)
+ * - Viewing artifact status
+ */
+
+const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
+const { execSync, spawn } = require('child_process');
+
+const COOK_DIR = path.join(process.cwd(), 'cook');
+const SCRIPTS_DIR = path.join(process.cwd(), 'scripts');
+
+// ANSI colors
+const colors = {
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  red: '\x1b[31m',
+  bgBlue: '\x1b[44m',
+  bgGreen: '\x1b[42m'
+};
+
+function c(color, text) {
+  return `${colors[color]}${text}${colors.reset}`;
+}
+
+// Get list of artifacts with metadata
+function getArtifacts() {
+  if (!fs.existsSync(COOK_DIR)) {
+    return [];
+  }
+
+  const files = fs.readdirSync(COOK_DIR)
+    .filter(f => f.endsWith('.cook.md'))
+    .map(f => {
+      const filePath = path.join(COOK_DIR, f);
+      const content = fs.readFileSync(filePath, 'utf-8');
+
+      // Extract metadata
+      const statusMatch = content.match(/^## Status\s*\n+(\S+)/m);
+      const modeMatch = content.match(/^## Cooking Mode\s*\n+(\S+)/m);
+      const dishMatch = content.match(/^## Dish\s*\n+(.+?)(?=\n\n|\n##|$)/m);
+
+      return {
+        filename: f,
+        name: f.replace('.cook.md', ''),
+        path: filePath,
+        status: statusMatch ? statusMatch[1] : 'unknown',
+        mode: modeMatch ? modeMatch[1] : 'unknown',
+        dish: dishMatch ? dishMatch[1].trim() : 'No description'
+      };
+    })
+    .sort((a, b) => fs.statSync(b.path).mtime - fs.statSync(a.path).mtime);
+
+  return files;
+}
+
+// Status color mapping
+function statusColor(status) {
+  const map = {
+    'well-done': 'green',
+    'ready-for-merge': 'green',
+    'plated': 'green',
+    'cooking': 'yellow',
+    'raw': 'yellow',
+    'blocked': 'red',
+    'needs-more-cooking': 'red'
+  };
+  return map[status] || 'dim';
+}
+
+// Clear screen and show header
+function showHeader(title) {
+  console.clear();
+  console.log(c('bold', c('cyan', '╔════════════════════════════════════════════════════════════╗')));
+  console.log(c('bold', c('cyan', '║')) + c('bold', `  🍳 cook-menu: ${title}`.padEnd(59)) + c('bold', c('cyan', '║')));
+  console.log(c('bold', c('cyan', '╚════════════════════════════════════════════════════════════╝')));
+  console.log();
+}
+
+// Show numbered menu and get selection
+async function showMenu(title, options, showBack = false) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise((resolve) => {
+    showHeader(title);
+
+    options.forEach((opt, i) => {
+      if (opt.separator) {
+        console.log(c('dim', '  ─────────────────────────────────────'));
+      } else {
+        const num = c('cyan', `[${i + 1}]`);
+        const label = opt.highlight ? c('bold', opt.label) : opt.label;
+        const desc = opt.description ? c('dim', ` - ${opt.description}`) : '';
+        console.log(`  ${num} ${label}${desc}`);
+      }
+    });
+
+    if (showBack) {
+      console.log();
+      console.log(`  ${c('dim', '[0]')} ${c('dim', 'Back / Exit')}`);
+    }
+
+    console.log();
+    rl.question(c('yellow', '  Enter choice: '), (answer) => {
+      rl.close();
+      const num = parseInt(answer, 10);
+      if (answer === '0' || answer.toLowerCase() === 'q') {
+        resolve(null);
+      } else if (num >= 1 && num <= options.length) {
+        resolve(options[num - 1]);
+      } else {
+        resolve(undefined); // Invalid
+      }
+    });
+  });
+}
+
+// Run validation
+function runValidate(artifact) {
+  console.clear();
+  console.log(c('bold', `\n  Validating: ${artifact.name}\n`));
+
+  try {
+    const result = execSync(`${SCRIPTS_DIR}/cook-validate "${artifact.path}" --verbose`, {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    console.log(result);
+  } catch (error) {
+    console.log(error.stdout || error.message);
+  }
+
+  console.log(c('dim', '\n  Press Enter to continue...'));
+  require('child_process').spawnSync('read', [], { shell: true, stdio: 'inherit' });
+}
+
+// Run diff
+async function runDiff(artifact, artifacts) {
+  const otherArtifacts = artifacts.filter(a => a.name !== artifact.name);
+
+  if (otherArtifacts.length === 0) {
+    console.log(c('yellow', '\n  No other artifacts to compare with.\n'));
+    await pause();
+    return;
+  }
+
+  const options = otherArtifacts.map(a => ({
+    label: a.name,
+    description: `${a.status} | ${a.mode}`,
+    value: a
+  }));
+
+  const selected = await showMenu(`Compare ${artifact.name} with:`, options, true);
+
+  if (!selected) return;
+
+  console.clear();
+  console.log(c('bold', `\n  Comparing artifacts:\n`));
+  console.log(c('cyan', `  A: ${artifact.name}`));
+  console.log(c('cyan', `  B: ${selected.value.name}\n`));
+
+  try {
+    const result = execSync(`${SCRIPTS_DIR}/cook-diff "${artifact.path}" "${selected.value.path}"`, {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    console.log(result);
+  } catch (error) {
+    console.log(error.stdout || error.message);
+  }
+
+  await pause();
+}
+
+// Show status summary
+function showStatus(artifact) {
+  console.clear();
+  showHeader(`Status: ${artifact.name}`);
+
+  const content = fs.readFileSync(artifact.path, 'utf-8');
+
+  console.log(c('bold', '  Artifact Information'));
+  console.log(c('dim', '  ─────────────────────────────────────'));
+  console.log(`  ${c('cyan', 'File:')}    ${artifact.filename}`);
+  console.log(`  ${c('cyan', 'Status:')}  ${c(statusColor(artifact.status), artifact.status)}`);
+  console.log(`  ${c('cyan', 'Mode:')}    ${artifact.mode}`);
+  console.log(`  ${c('cyan', 'Dish:')}    ${artifact.dish}`);
+
+  // Extract owner
+  const ownerMatch = content.match(/Decision Owner:\s*(.+)/);
+  if (ownerMatch) {
+    console.log(`  ${c('cyan', 'Owner:')}   ${ownerMatch[1]}`);
+  }
+
+  // Extract date from filename
+  const dateMatch = artifact.name.match(/(\d{4}-\d{2}-\d{2})/);
+  if (dateMatch) {
+    console.log(`  ${c('cyan', 'Date:')}    ${dateMatch[1]}`);
+  }
+
+  // Count sections
+  const sections = content.match(/^## /gm);
+  console.log(`  ${c('cyan', 'Sections:')} ${sections ? sections.length : 0}`);
+
+  // Show next actions if present
+  const nextActionsMatch = content.match(/## Next Actions\s*\n([\s\S]*?)(?=\n## |$)/);
+  if (nextActionsMatch) {
+    const todos = nextActionsMatch[1].match(/- \[ \]/g);
+    const dones = nextActionsMatch[1].match(/- \[x\]/gi);
+    const todoCount = todos ? todos.length : 0;
+    const doneCount = dones ? dones.length : 0;
+    console.log(`  ${c('cyan', 'Tasks:')}   ${doneCount}/${todoCount + doneCount} completed`);
+  }
+
+  console.log();
+}
+
+// Pause for user
+function pause() {
+  return new Promise(resolve => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    rl.question(c('dim', '  Press Enter to continue...'), () => {
+      rl.close();
+      resolve();
+    });
+  });
+}
+
+// Main menu
+async function main() {
+  while (true) {
+    const artifacts = getArtifacts();
+
+    if (artifacts.length === 0) {
+      showHeader('No artifacts found');
+      console.log(c('yellow', '  No cook artifacts found in cook/*.cook.md'));
+      console.log(c('dim', '  Run /cook <feature> to create one.'));
+      console.log();
+      break;
+    }
+
+    // Main artifact selection
+    const options = artifacts.map(a => ({
+      label: a.name,
+      description: `${c(statusColor(a.status), a.status)} | ${a.mode}`,
+      value: a
+    }));
+
+    const selected = await showMenu('Select artifact', options, true);
+
+    if (selected === null) {
+      console.clear();
+      break;
+    }
+    if (selected === undefined) continue;
+
+    // Action menu
+    while (true) {
+      const actionOptions = [
+        { label: '✓ Validate', description: 'Run validation checks', action: 'validate' },
+        { label: '⇄ Compare', description: 'Diff with another artifact', action: 'diff' },
+        { label: 'ℹ Status', description: 'View artifact summary', action: 'status' }
+      ];
+
+      const action = await showMenu(`${selected.value.name}`, actionOptions, true);
+
+      if (action === null) break;
+      if (action === undefined) continue;
+
+      switch (action.action) {
+        case 'validate':
+          runValidate(selected.value);
+          break;
+        case 'diff':
+          await runDiff(selected.value, artifacts);
+          break;
+        case 'status':
+          showStatus(selected.value);
+          await pause();
+          break;
+      }
+    }
+  }
+}
+
+main().catch(console.error);

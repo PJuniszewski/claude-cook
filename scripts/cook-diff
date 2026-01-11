@@ -1,0 +1,209 @@
+#!/usr/bin/env node
+
+/**
+ * cook-diff - Compare two cook artifacts and show section-level differences
+ *
+ * Usage:
+ *   ./scripts/cook-diff <fileA> <fileB>
+ *   ./scripts/cook-diff <fileA> <fileB> --since 2026-01-01
+ *   ./scripts/cook-diff <file> --since 2026-01-01  (show changelog since date)
+ *
+ * Design Decisions:
+ *   - Versioning: Option A (## Changelog inside artifact file)
+ *     Rationale: Single file management, visible in artifact, no orphaned metadata
+ *   - Diff Granularity: Section-level (## headings)
+ *     Rationale: Aligns with artifact structure, readable output
+ */
+
+const path = require('path');
+const {
+  parseArtifact,
+  diffSections,
+  filterChangelogByDate
+} = require('./lib/artifactParser');
+
+// Parse command line arguments
+function parseArgs(argv) {
+  const args = {
+    files: [],
+    since: null,
+    help: false
+  };
+
+  for (let i = 2; i < argv.length; i++) {
+    const arg = argv[i];
+
+    if (arg === '--help' || arg === '-h') {
+      args.help = true;
+    } else if (arg === '--since' && argv[i + 1]) {
+      args.since = argv[++i];
+    } else if (!arg.startsWith('-')) {
+      args.files.push(arg);
+    }
+  }
+
+  return args;
+}
+
+// Print usage information
+function printUsage() {
+  console.log(`
+cook-diff - Compare cook artifacts
+
+USAGE:
+  cook-diff <fileA> <fileB>              Compare two artifacts
+  cook-diff <fileA> <fileB> --since DATE Filter to changes since DATE
+  cook-diff <file> --since DATE          Show changelog entries since DATE
+
+OPTIONS:
+  --since DATE    Only show changes since DATE (YYYY-MM-DD format)
+  --help, -h      Show this help message
+
+EXAMPLES:
+  cook-diff cook/auth.2026-01-07.cook.md cook/auth.2026-01-10.cook.md
+  cook-diff cook/feature.cook.md --since 2026-01-01
+
+OUTPUT:
+  Shows section-level differences:
+  - ADDED: Sections present in B but not in A
+  - REMOVED: Sections present in A but not in B
+  - MODIFIED: Sections with changed content
+`);
+}
+
+// Format diff output
+function formatDiff(artifactA, artifactB, diff, sinceDate) {
+  const lines = [];
+
+  lines.push('ARTIFACT DIFF');
+  lines.push('=============');
+  lines.push(`A: ${artifactA.filename}`);
+  lines.push(`B: ${artifactB.filename}`);
+  lines.push('');
+
+  // Show header differences
+  if (artifactA.header.status !== artifactB.header.status) {
+    lines.push(`STATUS: ${artifactA.header.status} -> ${artifactB.header.status}`);
+  }
+
+  // Added sections
+  if (diff.added.length > 0) {
+    lines.push('ADDED SECTIONS:');
+    for (const section of diff.added) {
+      lines.push(`  + ## ${section.name}`);
+    }
+    lines.push('');
+  }
+
+  // Removed sections
+  if (diff.removed.length > 0) {
+    lines.push('REMOVED SECTIONS:');
+    for (const section of diff.removed) {
+      lines.push(`  - ## ${section.name}`);
+    }
+    lines.push('');
+  }
+
+  // Modified sections
+  if (diff.modified.length > 0) {
+    lines.push('MODIFIED SECTIONS:');
+    for (const section of diff.modified) {
+      lines.push(`  ~ ## ${section.name}`);
+      for (const bullet of section.summary) {
+        lines.push(`      ${bullet}`);
+      }
+    }
+    lines.push('');
+  }
+
+  // Changelog filter
+  if (sinceDate && artifactB.changelog.length > 0) {
+    const filteredChangelog = filterChangelogByDate(artifactB.changelog, sinceDate);
+    if (filteredChangelog.length > 0) {
+      lines.push(`CHANGELOG (since ${sinceDate}):`);
+      for (const entry of filteredChangelog) {
+        lines.push(`  ${entry.date}: ${entry.summary}`);
+      }
+      lines.push('');
+    }
+  }
+
+  // Summary
+  const totalChanges = diff.added.length + diff.removed.length + diff.modified.length;
+  if (totalChanges === 0) {
+    lines.push('No changes detected.');
+  } else {
+    lines.push('---');
+    const parts = [];
+    if (diff.added.length > 0) parts.push(`${diff.added.length} added`);
+    if (diff.removed.length > 0) parts.push(`${diff.removed.length} removed`);
+    if (diff.modified.length > 0) parts.push(`${diff.modified.length} modified`);
+    lines.push(`${totalChanges} section(s) changed: ${parts.join(', ')}`);
+  }
+
+  return lines.join('\n');
+}
+
+// Format changelog-only output
+function formatChangelogSince(artifact, sinceDate) {
+  const lines = [];
+
+  lines.push(`CHANGELOG: ${artifact.filename}`);
+  lines.push(`Since: ${sinceDate}`);
+  lines.push('');
+
+  const filtered = filterChangelogByDate(artifact.changelog, sinceDate);
+
+  if (filtered.length === 0) {
+    lines.push('No changelog entries since this date.');
+  } else {
+    for (const entry of filtered) {
+      lines.push(`${entry.date}: ${entry.summary}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+// Main function
+function main() {
+  const args = parseArgs(process.argv);
+
+  if (args.help) {
+    printUsage();
+    process.exit(0);
+  }
+
+  // Single file with --since: show changelog
+  if (args.files.length === 1 && args.since) {
+    try {
+      const artifact = parseArtifact(args.files[0]);
+      console.log(formatChangelogSince(artifact, args.since));
+      process.exit(0);
+    } catch (error) {
+      console.error(`Error: ${error.message}`);
+      process.exit(1);
+    }
+  }
+
+  // Two files: compare
+  if (args.files.length === 2) {
+    try {
+      const artifactA = parseArtifact(args.files[0]);
+      const artifactB = parseArtifact(args.files[1]);
+
+      const diff = diffSections(artifactA.sections, artifactB.sections);
+      console.log(formatDiff(artifactA, artifactB, diff, args.since));
+      process.exit(0);
+    } catch (error) {
+      console.error(`Error: ${error.message}`);
+      process.exit(1);
+    }
+  }
+
+  // Invalid usage
+  console.error('Error: Invalid arguments. Use --help for usage information.');
+  process.exit(1);
+}
+
+main();
