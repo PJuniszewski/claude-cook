@@ -1,5 +1,4 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-cook",
   "description": "Structured multi-phase development workflow plugin for Claude Code",
   "owner": {
