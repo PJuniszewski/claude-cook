@@ -6,7 +6,7 @@ argument-hint: <feature description> [--well-done | --microwave]
 # /cook Command Specification
 
 ## Purpose
-`/cook` runs the **feature-development** skill against a feature request.
+`/cook` runs the **cook** skill against a feature request.
 
 It enforces a disciplined, multi-phase development process with proper review gates.
 Think of it as preparing a dish: ingredients must be fresh, cooking must be thorough, and plating must be precise.
@@ -104,7 +104,7 @@ These statuses appear in cooking results and decision artifacts.
 When `/cook` is invoked, Claude Code MUST:
 
 1. Refuse to jump straight into coding (no raw code)
-2. Run feature-development skill
+2. Run cook skill
 3. Clearly label each cooking phase
 4. Produce final Cooking Result with status
 

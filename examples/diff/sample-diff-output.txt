@@ -1,0 +1,50 @@
+# Example: cook-diff output
+
+This shows what the cook-diff CLI produces when comparing two artifacts.
+
+## Command
+
+```bash
+./scripts/cook-diff cook/auth.2026-01-07.cook.md cook/auth.2026-01-10.cook.md
+```
+
+## Output
+
+ARTIFACT DIFF
+=============
+A: auth.2026-01-07.cook.md
+B: auth.2026-01-10.cook.md
+
+STATUS: cooking -> well-done
+ADDED SECTIONS:
+  + ## Security Review
+
+REMOVED SECTIONS:
+  - ## Open Questions
+
+MODIFIED SECTIONS:
+  ~ ## Status
+      Added: "well-done"
+      Removed: "cooking"
+  ~ ## Scope
+      Added: "- OAuth 2.0 integration"
+      +2 lines
+  ~ ## Implementation Plan
+      Added: "- src/auth/oauth.ts - OAuth handler"
+      +3 lines
+
+---
+5 section(s) changed: 1 added, 1 removed, 3 modified
+
+
+## Changelog Filter
+
+```bash
+./scripts/cook-diff cook/auth.2026-01-10.cook.md --since 2026-01-08
+```
+
+CHANGELOG: auth.2026-01-10.cook.md
+Since: 2026-01-08
+
+2026-01-09: Added OAuth configuration options
+2026-01-10: Security review completed, status updated to well-done
