@@ -39,6 +39,14 @@ Every dish must be properly prepared before serving.
   Launch interactive menu for artifact management.
   Example: `/cook --interactive`
 
+- **implement** (boolean, default: false)
+  After planning, automatically start implementation (create branch, code, commit).
+  Example: `/cook Add feature --implement`
+
+- **create-pr** (boolean, default: false)
+  After planning and implementation, create PR automatically.
+  Example: `/cook Add feature --create-pr`
+
 ---
 
 ## Interactive Mode
@@ -216,8 +224,11 @@ Every feature progresses through these stages:
 | `blocked` | Specific blocker identified (requires owner + next step) |
 | `needs-more-cooking` | Rejected, incomplete, or killed (+ reason field) |
 | `well-done` | Approved and ready to implement |
+| `planned` | Artifact complete, awaiting implementation (with --implement/--create-pr) |
+| `implementing` | Implementation in progress (branch created, coding active) |
+| `pr-ready` | PR created and linked, awaiting review/merge |
 | `ready-for-merge` | Post QA/Security, ready for merge |
-| `plated` | Shipped to production |
+| `plated` | Shipped to production (PR merged) |
 
 **Note:** `killed` is NOT a separate status. Use `needs-more-cooking` with `reason: killed - <why>`
 
@@ -720,3 +731,209 @@ To validate an existing artifact without re-cooking:
 ```
 /cook --validate cook/existing-artifact.cook.md
 ```
+
+---
+
+## Execution Mode (Code-Artifact Linking)
+
+By default, `/cook` only creates a plan artifact without touching the repository.
+Use execution flags to opt-in to automatic implementation.
+
+### Safe by Default
+
+```
+/cook Add feature        # Plan only (default) - no repo changes
+/cook Add feature --implement   # Plan + implement
+/cook Add feature --create-pr   # Plan + implement + PR
+```
+
+**Important:** Without `--implement` or `--create-pr`, cook never:
+- Creates branches
+- Writes code
+- Makes commits
+- Pushes to remote
+- Creates PRs
+
+### --implement Flag
+
+After planning completes successfully:
+
+1. **Create branch**: `cook/<slug>` (or detect existing)
+2. **Implement**: Follow Patch Plan from artifact
+3. **Commit**: Tag all commits with `[cook:<cook_id>]`
+4. **Update artifact**: Add Implementation Status section
+5. **Transition status**: `planned → implementing`
+
+### --create-pr Flag
+
+Does everything `--implement` does, plus:
+
+1. **Push branch** to remote
+2. **Create PR** using artifact summary as description
+3. **Link PR** in artifact Implementation Status
+4. **Auto-verify** before PR (see below)
+5. **Transition status**: `implementing → pr-ready`
+
+### Natural Language Triggers
+
+After planning (without flags), users can trigger execution via natural language:
+
+| Phrase | Action | Checkpoint |
+|--------|--------|------------|
+| "implement it" / "start coding" | `--implement` | Yes (confirmation required) |
+| "ship it" / "create PR" / "push" | `--create-pr` | Yes (auto-verify first) |
+
+**Checkpoint Confirmation Example:**
+
+```
+User: "implement it"
+
+Claude: Ready to implement user-auth. This will:
+- Create branch: cook/user-auth
+- Modify 5 files per Patch Plan
+- Create commits tagged [cook:user-auth.2026-01-12]
+
+Proceed? [Y/n]
+```
+
+### Auto-Verify Before PR
+
+Before creating a PR, automatically verify implementation matches plan:
+
+```
+Verifying implementation against Patch Plan...
+
+Coverage:
+✓ src/auth/login.ts (planned → changed)
+✓ src/auth/logout.ts (planned → changed)
+✗ src/auth/session.ts (planned → NOT changed)
+⚠ src/utils/crypto.ts (NOT planned → changed)
+
+TODO scan:
+⚠ 2 TODOs found in changed files
+
+Verdict: PARTIAL MATCH (4/5 files, 1 unplanned change)
+
+Options:
+1. Create PR anyway (with warnings noted)
+2. Fix missing implementation first
+3. Abort
+```
+
+### State Tracking
+
+Cook state is tracked in `.claude/cook-state.json`:
+
+```json
+{
+  "active": "user-auth.2026-01-12",
+  "cooks": {
+    "user-auth.2026-01-12": {
+      "artifact": "cook/user-auth.2026-01-12.cook.md",
+      "status": "implementing",
+      "branch": "cook/user-auth",
+      "commits": ["abc123", "def456"],
+      "pr": null,
+      "created": "2026-01-12T10:00:00Z",
+      "updated": "2026-01-12T14:30:00Z"
+    }
+  }
+}
+```
+
+**State Rules:**
+- **Active cook**: Last `/cook` wins; explicit mention overrides
+- **Auto-cleanup**: Completed cooks (plated) archived after 30 days
+- **Manual override**: User can switch active cook by mentioning artifact name
+
+### Cook Status Command
+
+Optional escape hatch to see all active cooks:
+
+```
+/cook status
+```
+
+Output:
+```
+Active Cooks:
+┌─────────────────────────┬─────────────┬────────────────┬────────┐
+│ Artifact                │ Status      │ Branch         │ PR     │
+├─────────────────────────┼─────────────┼────────────────┼────────┤
+│ user-auth.2026-01-12    │ implementing│ cook/user-auth │ -      │
+│ dark-mode.2026-01-11    │ pr-ready    │ cook/dark-mode │ #42    │
+│ api-refactor.2026-01-10 │ plated      │ (merged)       │ #38 ✓  │
+└─────────────────────────┴─────────────┴────────────────┴────────┘
+
+Active: user-auth.2026-01-12
+```
+
+### Implementation Status Section
+
+Added to artifact automatically when using execution flags:
+
+```markdown
+## Implementation Status
+- Status: planned | implementing | pr-ready | plated
+- Branch: cook/user-auth (auto-created)
+- PR: #42 (https://github.com/...)
+- Commits: 5 [cook:user-auth.2026-01-12]
+- Coverage: 5/5 planned files ✓
+- Unplanned changes: none
+- Last activity: 2026-01-12 14:30
+```
+
+### Commit Message Format
+
+All commits created by cook include the cook ID:
+
+```
+feat: add login form [cook:user-auth.2026-01-12]
+
+Implements login form component per Patch Plan.
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+### Scope Creep Detection
+
+If user requests changes outside the active cook's scope:
+
+```
+User: "also add password reset"
+
+Claude: ⚠️ Password reset is not in the current cook plan (user-auth).
+
+Options:
+1. Re-cook: Update user-auth scope to include password reset
+2. New cook: Create separate cook for password-reset
+3. Untracked: Add without cook tracking (not recommended)
+
+Which approach?
+```
+
+If user chooses (1) Re-cook:
+- Update artifact with new scope
+- Regenerate Patch Plan
+- Continue implementation
+
+### Status Transitions
+
+```
+┌──────────┐     ┌─────────────┐     ┌──────────┐     ┌────────┐
+│ planned  │────>│implementing │────>│ pr-ready │────>│ plated │
+└──────────┘     └─────────────┘     └──────────┘     └────────┘
+     │                  │                  │
+     │                  │                  │
+     v                  v                  v
+┌─────────────────────────────────────────────────────────────┐
+│                    needs-more-cooking                        │
+│              (blocked, killed, or failed)                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Transition Rules:**
+- `planned → implementing`: When `--implement` starts or user confirms "implement it"
+- `implementing → pr-ready`: When PR created successfully
+- `pr-ready → plated`: When PR merged (detected via `gh pr status` or manual update)
+- Any → `needs-more-cooking`: When blocked, killed, or verification fails

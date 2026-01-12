@@ -24,6 +24,8 @@ Optional flags:
 /cook <feature description> --well-done
 /cook <feature description> --microwave
 /cook <feature description> --instruction=<file.md>
+/cook <feature description> --implement
+/cook <feature description> --create-pr
 ```
 
 ---
@@ -63,6 +65,44 @@ Microwave cooking is fast but not thorough. Use it when you need a quick bite, n
 
 ---
 
+## Execution Mode (Code-Artifact Linking)
+
+By default, `/cook` only creates a plan artifact without touching the repository. Use execution flags to opt-in to automatic implementation.
+
+### --implement
+Plan + start implementation. After planning:
+- Creates branch `cook/<slug>` (or uses existing)
+- Implements according to Patch Plan
+- Tags all commits with `[cook:<cook_id>]`
+- Updates artifact with Implementation Status
+- Transitions status: `planned → implementing`
+
+### --create-pr
+Plan + implement + create PR. Does everything `--implement` does, plus:
+- Pushes branch to remote
+- Creates PR with artifact summary as description
+- Links PR URL in artifact
+- Transitions status: `implementing → pr-ready`
+
+### Natural Language Triggers
+Instead of flags, you can use natural language after planning:
+- "implement it" / "start coding" → behaves like `--implement` (with checkpoint)
+- "ship it" / "create PR" → behaves like `--create-pr` (with auto-verify)
+
+**Important:** Natural language triggers require explicit confirmation before execution.
+
+### State Tracking
+Cook state is tracked in `.claude/cook-state.json`:
+- Active cook (last `/cook` wins, explicit mention overrides)
+- Branch assignment
+- Commit history
+- PR link
+- Status transitions
+
+This file is auto-managed - no manual editing required.
+
+---
+
 ## Microwave Blockers
 
 Microwave mode is **BLOCKED** for these topics. Automatically escalates to `--well-done`:
@@ -90,8 +130,11 @@ Every feature goes through these stages:
 | `blocked` | Specific blocker identified (owner + next step required) |
 | `needs-more-cooking` | Rejected, incomplete, or killed (see reason field) |
 | `well-done` | Approved and ready to implement |
+| `planned` | Artifact complete, awaiting implementation (with --implement/--create-pr) |
+| `implementing` | Implementation in progress (branch created, coding active) |
+| `pr-ready` | PR created and linked, awaiting review/merge |
 | `ready-for-merge` | Post QA/Security, ready for merge |
-| `plated` | Shipped to production |
+| `plated` | Shipped to production (PR merged) |
 
 **Note:** `killed` is not a separate status. Use `needs-more-cooking` with `reason: killed - <why>`.
 
