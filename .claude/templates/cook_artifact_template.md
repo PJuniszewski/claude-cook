@@ -4,11 +4,22 @@
 <short description of the feature or fix>
 
 ## Status
-<!-- One of: raw | cooking | blocked | needs-more-cooking | well-done | ready-for-merge | plated -->
+<!-- One of: raw | cooking | blocked | needs-more-cooking | well-done | planned | implementing | pr-ready | ready-for-merge | plated -->
 <!-- If killed: needs-more-cooking + reason: killed - <why> -->
 
 ## Cooking Mode
 <!-- well-done | microwave -->
+
+## Implementation Status
+<!-- Auto-populated when using --implement or --create-pr flags -->
+<!-- Remove this section if not using execution mode -->
+- Execution: planned | implementing | pr-ready | plated
+- Branch: <!-- auto-filled: cook/<slug> -->
+- PR: <!-- auto-filled: #number (url) -->
+- Commits: <!-- auto-filled: count [cook:<cook_id>] -->
+- Coverage: <!-- auto-filled: X/Y planned files -->
+- Unplanned changes: <!-- auto-filled: none | list -->
+- Last activity: <!-- auto-filled: timestamp -->
 
 ---
 

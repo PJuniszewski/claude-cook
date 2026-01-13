@@ -1,0 +1,276 @@
+#!/usr/bin/env node
+
+/**
+ * cook-implement - Implementation flow for --implement flag
+ *
+ * Usage:
+ *   cook-implement <artifact-path>
+ *   cook-implement --artifact <path>
+ *   cook-implement --active (use active cook from state)
+ *
+ * This script:
+ * 1. Parses artifact for Patch Plan
+ * 2. Creates/switches to cook/<slug> branch
+ * 3. Registers cook in state
+ * 4. Updates artifact status to 'implementing'
+ * 5. Outputs implementation guidance
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const {
+  parseArtifact,
+  extractPatchPlan,
+  updateImplementationStatus,
+  updateArtifactStatus,
+  addChangelogEntry,
+  extractCookId
+} = require('./lib/artifactParser');
+
+const {
+  loadState,
+  saveState,
+  addCook,
+  updateCook,
+  getActiveCook,
+  extractCookIdFromFilename,
+  extractSlugFromCookId
+} = require('./lib/stateManager');
+
+const {
+  isGitRepo,
+  getCurrentBranch,
+  createCookBranch,
+  getUncommittedChanges
+} = require('./lib/gitOperations');
+
+// Parse arguments
+const args = process.argv.slice(2);
+
+function printUsage() {
+  console.log(`
+cook-implement - Start implementation from cook artifact
+
+USAGE:
+  cook-implement <artifact-path>
+  cook-implement --artifact <path>
+  cook-implement --active
+
+OPTIONS:
+  --artifact <path>   Path to cook artifact file
+  --active            Use active cook from state
+  --dry-run           Show what would happen without making changes
+  --help              Show this help
+
+EXAMPLE:
+  cook-implement cook/user-auth.2026-01-12.cook.md
+  cook-implement --active
+`);
+}
+
+// Check for help
+if (args.includes('--help') || args.includes('-h')) {
+  printUsage();
+  process.exit(0);
+}
+
+// Parse options
+const isDryRun = args.includes('--dry-run');
+const useActive = args.includes('--active');
+
+let artifactPath = null;
+
+if (useActive) {
+  const activeCook = getActiveCook();
+  if (!activeCook) {
+    console.error('Error: No active cook found in state');
+    console.error('Run a /cook command first or specify an artifact path');
+    process.exit(1);
+  }
+  artifactPath = activeCook.artifact;
+} else {
+  // Find artifact path from args
+  const artifactIdx = args.indexOf('--artifact');
+  if (artifactIdx !== -1 && args[artifactIdx + 1]) {
+    artifactPath = args[artifactIdx + 1];
+  } else {
+    // First non-flag argument
+    artifactPath = args.find(a => !a.startsWith('--'));
+  }
+}
+
+if (!artifactPath) {
+  console.error('Error: No artifact path specified');
+  printUsage();
+  process.exit(1);
+}
+
+// Resolve path
+artifactPath = path.resolve(artifactPath);
+
+// Validate artifact exists
+if (!fs.existsSync(artifactPath)) {
+  console.error(`Error: Artifact not found: ${artifactPath}`);
+  process.exit(1);
+}
+
+// Check git repo
+if (!isGitRepo()) {
+  console.error('Error: Not in a git repository');
+  process.exit(1);
+}
+
+// Check for uncommitted changes
+const uncommitted = getUncommittedChanges();
+if (uncommitted.staged.length > 0 || uncommitted.unstaged.length > 0) {
+  console.warn('Warning: You have uncommitted changes');
+  console.warn('Consider committing or stashing them before proceeding');
+  console.warn('');
+}
+
+// Parse artifact
+let artifact;
+try {
+  artifact = parseArtifact(artifactPath);
+} catch (error) {
+  console.error(`Error parsing artifact: ${error.message}`);
+  process.exit(1);
+}
+
+// Extract cook ID and slug
+const cookId = extractCookIdFromFilename(artifactPath);
+const slug = extractSlugFromCookId(cookId);
+
+if (!cookId || !slug) {
+  console.error('Error: Could not extract cook ID from artifact filename');
+  console.error('Expected format: <slug>.<YYYY-MM-DD>.cook.md');
+  process.exit(1);
+}
+
+// Get Patch Plan
+const patchPlan = extractPatchPlan(artifact.raw);
+
+if (patchPlan.length === 0) {
+  console.error('Error: No Patch Plan found in artifact');
+  console.error('Ensure artifact has an Implementation Plan section with file paths');
+  process.exit(1);
+}
+
+console.log('');
+console.log('cook-implement');
+console.log('==============');
+console.log('');
+console.log(`Artifact: ${path.basename(artifactPath)}`);
+console.log(`Cook ID:  ${cookId}`);
+console.log(`Slug:     ${slug}`);
+console.log('');
+
+// Show Patch Plan
+console.log('Patch Plan:');
+for (const item of patchPlan) {
+  console.log(`  - ${item.file} (${item.action})`);
+  if (item.description) {
+    console.log(`    ${item.description}`);
+  }
+}
+console.log('');
+
+if (isDryRun) {
+  console.log('[DRY RUN] Would perform the following:');
+  console.log(`  1. Create/switch to branch: cook/${slug}`);
+  console.log(`  2. Register cook in state: ${cookId}`);
+  console.log(`  3. Update artifact status: implementing`);
+  console.log('');
+  process.exit(0);
+}
+
+// Create/switch to cook branch
+console.log(`Creating branch: cook/${slug}`);
+const branchResult = createCookBranch(slug);
+
+if (branchResult.created) {
+  console.log(`  ✓ Created new branch: ${branchResult.branch}`);
+} else if (branchResult.switched) {
+  console.log(`  ✓ Switched to existing branch: ${branchResult.branch}`);
+} else {
+  console.log(`  ✓ Already on branch: ${branchResult.branch}`);
+}
+console.log('');
+
+// Register in state
+console.log('Registering cook in state...');
+const state = loadState();
+
+if (state.cooks[cookId]) {
+  // Update existing
+  updateCook(cookId, {
+    status: 'implementing',
+    branch: branchResult.branch
+  });
+  console.log(`  ✓ Updated existing cook: ${cookId}`);
+} else {
+  // Add new
+  addCook(cookId, {
+    artifact: artifactPath,
+    status: 'implementing',
+    branch: branchResult.branch
+  });
+  console.log(`  ✓ Registered new cook: ${cookId}`);
+}
+console.log('');
+
+// Update artifact
+console.log('Updating artifact...');
+
+let content = fs.readFileSync(artifactPath, 'utf-8');
+
+// Update status section
+content = updateArtifactStatus(content, 'implementing');
+
+// Update/add Implementation Status section
+content = updateImplementationStatus(content, {
+  execution: 'implementing',
+  branch: branchResult.branch,
+  branchCreated: branchResult.created,
+  commits: 0,
+  cookTag: cookId,
+  coverage: `0/${patchPlan.length}`,
+  unplannedChanges: 'none'
+});
+
+// Add changelog entry
+content = addChangelogEntry(content, `Implementation started. Branch: ${branchResult.branch}`);
+
+fs.writeFileSync(artifactPath, content, 'utf-8');
+console.log('  ✓ Updated Implementation Status section');
+console.log('  ✓ Added changelog entry');
+console.log('');
+
+// Output guidance
+console.log('Implementation Guidance');
+console.log('-----------------------');
+console.log('');
+console.log('You are now on branch:', getCurrentBranch());
+console.log('');
+console.log('Files to implement:');
+for (let i = 0; i < patchPlan.length; i++) {
+  const item = patchPlan[i];
+  console.log(`  ${i + 1}. ${item.file}`);
+  if (item.description) {
+    console.log(`     → ${item.description}`);
+  }
+}
+console.log('');
+console.log('Commit convention:');
+console.log(`  All commits should include: [cook:${cookId}]`);
+console.log('');
+console.log('Example:');
+console.log(`  git commit -m "feat: add login form [cook:${cookId}]"`);
+console.log('');
+console.log('When done implementing, run:');
+console.log('  cook-verify', path.basename(artifactPath));
+console.log('');
+console.log('To create PR:');
+console.log('  cook-verify --create-pr', path.basename(artifactPath));
+console.log('');

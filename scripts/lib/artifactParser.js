@@ -261,6 +261,392 @@ function parseArtifact(filePath) {
   };
 }
 
+/**
+ * Parse Implementation Status section from artifact
+ *
+ * @param {string} content - Raw markdown content
+ * @returns {Object|null} Parsed implementation status or null if not present
+ */
+function parseImplementationStatus(content) {
+  const sections = parseSections(content);
+  const implSection = sections.get('Implementation Status');
+
+  if (!implSection) {
+    return null;
+  }
+
+  const status = {
+    execution: null,
+    branch: null,
+    pr: null,
+    prUrl: null,
+    commits: 0,
+    cookTag: null,
+    coverage: null,
+    unplannedChanges: null,
+    foreignCommits: [],
+    untrackedChanges: [],
+    lastActivity: null
+  };
+
+  // Parse each line
+  const lines = implSection.split('\n');
+
+  for (const line of lines) {
+    // Status/Execution
+    const execMatch = line.match(/(?:Status|Execution):\s*(\S+)/i);
+    if (execMatch) {
+      status.execution = execMatch[1].toLowerCase();
+    }
+
+    // Branch
+    const branchMatch = line.match(/Branch:\s*(\S+)/i);
+    if (branchMatch) {
+      status.branch = branchMatch[1].replace(/[()]/g, '');
+    }
+
+    // PR number and URL
+    const prMatch = line.match(/PR:\s*#?(\d+)/i);
+    if (prMatch) {
+      status.pr = parseInt(prMatch[1], 10);
+    }
+    const prUrlMatch = line.match(/PR:.*?(https:\/\/github\.com\/[^\s)]+)/i);
+    if (prUrlMatch) {
+      status.prUrl = prUrlMatch[1];
+    }
+
+    // Commits count and tag
+    const commitsMatch = line.match(/Commits:\s*(\d+)/i);
+    if (commitsMatch) {
+      status.commits = parseInt(commitsMatch[1], 10);
+    }
+    const tagMatch = line.match(/\[cook:([^\]]+)\]/);
+    if (tagMatch) {
+      status.cookTag = tagMatch[1];
+    }
+
+    // Coverage
+    const coverageMatch = line.match(/Coverage:\s*(\d+\/\d+)/i);
+    if (coverageMatch) {
+      status.coverage = coverageMatch[1];
+    }
+
+    // Unplanned changes
+    const unplannedMatch = line.match(/Unplanned changes:\s*(.+)/i);
+    if (unplannedMatch) {
+      status.unplannedChanges = unplannedMatch[1].trim();
+    }
+
+    // Last activity
+    const activityMatch = line.match(/Last activity:\s*(.+)/i);
+    if (activityMatch) {
+      status.lastActivity = activityMatch[1].trim();
+    }
+
+    // Foreign commits (multi-line, starts with warning emoji)
+    if (line.includes('Foreign commits:')) {
+      const countMatch = line.match(/Foreign commits:\s*(\d+)/i);
+      if (countMatch && parseInt(countMatch[1], 10) > 0) {
+        // Parse following indented lines as foreign commits
+        const idx = lines.indexOf(line);
+        for (let i = idx + 1; i < lines.length; i++) {
+          const fcLine = lines[i];
+          if (fcLine.startsWith('  - ') || fcLine.startsWith('    - ')) {
+            status.foreignCommits.push(fcLine.trim().replace(/^- /, ''));
+          } else if (!fcLine.startsWith('  ')) {
+            break;
+          }
+        }
+      }
+    }
+
+    // Untracked changes warning
+    if (line.includes('UNTRACKED CHANGES DETECTED')) {
+      const idx = lines.indexOf(line);
+      for (let i = idx + 1; i < lines.length; i++) {
+        const ucLine = lines[i];
+        if (ucLine.startsWith('  - ') || ucLine.startsWith('    - ')) {
+          status.untrackedChanges.push(ucLine.trim().replace(/^- /, ''));
+        } else if (!ucLine.startsWith('  ')) {
+          break;
+        }
+      }
+    }
+  }
+
+  return status;
+}
+
+/**
+ * Update or create Implementation Status section in artifact content
+ *
+ * @param {string} content - Raw markdown content
+ * @param {Object} updates - Fields to update
+ * @returns {string} Updated content
+ */
+function updateImplementationStatus(content, updates) {
+  const now = new Date().toISOString().split('T')[0] + ' ' +
+              new Date().toISOString().split('T')[1].substring(0, 5);
+
+  // Build new Implementation Status section
+  let newSection = '## Implementation Status\n';
+  newSection += `- Status: ${updates.execution || 'planned'}\n`;
+
+  if (updates.branch) {
+    newSection += `- Branch: ${updates.branch}`;
+    if (updates.branchCreated) {
+      newSection += ' (auto-created)';
+    }
+    newSection += '\n';
+  }
+
+  if (updates.pr) {
+    newSection += `- PR: #${updates.pr}`;
+    if (updates.prUrl) {
+      newSection += ` (${updates.prUrl})`;
+    }
+    newSection += '\n';
+  }
+
+  if (updates.commits !== undefined) {
+    newSection += `- Commits: ${updates.commits}`;
+    if (updates.cookTag) {
+      newSection += ` [cook:${updates.cookTag}]`;
+    }
+    newSection += '\n';
+  }
+
+  if (updates.coverage) {
+    newSection += `- Coverage: ${updates.coverage}\n`;
+  }
+
+  if (updates.unplannedChanges !== undefined) {
+    newSection += `- Unplanned changes: ${updates.unplannedChanges || 'none'}\n`;
+  }
+
+  if (updates.foreignCommits && updates.foreignCommits.length > 0) {
+    newSection += `- Foreign commits: ${updates.foreignCommits.length}\n`;
+    for (const fc of updates.foreignCommits) {
+      newSection += `  - ${fc}\n`;
+    }
+  }
+
+  if (updates.untrackedChanges && updates.untrackedChanges.length > 0) {
+    newSection += `- UNTRACKED CHANGES DETECTED:\n`;
+    for (const uc of updates.untrackedChanges) {
+      newSection += `  - ${uc}\n`;
+    }
+  }
+
+  newSection += `- Last activity: ${now}\n`;
+
+  // Check if Implementation Status section exists
+  const sections = parseSections(content);
+
+  if (sections.has('Implementation Status')) {
+    // Replace existing section - find start and end precisely
+    const lines = content.split('\n');
+    let startLine = -1;
+    let endLine = lines.length;
+
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith('## Implementation Status')) {
+        startLine = i;
+      } else if (startLine !== -1 && lines[i].startsWith('## ')) {
+        // Found next section
+        endLine = i;
+        break;
+      }
+    }
+
+    if (startLine !== -1) {
+      const before = lines.slice(0, startLine).join('\n');
+      const after = lines.slice(endLine).join('\n');
+      return before + (before.endsWith('\n') ? '' : '\n') + newSection.trim() + '\n\n' + after;
+    }
+  }
+
+  // Insert after Cooking Mode section (or after Status if no Cooking Mode)
+  const insertAfter = sections.has('Cooking Mode') ? 'Cooking Mode' : 'Status';
+  const lines = content.split('\n');
+  let insertIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith(`## ${insertAfter}`)) {
+      // Find end of this section
+      for (let j = i + 1; j < lines.length; j++) {
+        if (lines[j].startsWith('## ')) {
+          insertIndex = j;
+          break;
+        }
+      }
+      if (insertIndex === -1) {
+        insertIndex = lines.length;
+      }
+      break;
+    }
+  }
+
+  if (insertIndex !== -1) {
+    const before = lines.slice(0, insertIndex).join('\n');
+    const after = lines.slice(insertIndex).join('\n');
+    return before + '\n\n' + newSection + after;
+  }
+
+  // Fallback: append at end
+  return content + '\n\n' + newSection;
+}
+
+/**
+ * Extract Patch Plan files from artifact
+ * Looks for file paths in Implementation Plan or Patch Plan section
+ *
+ * @param {string} content - Raw markdown content
+ * @returns {Array<{file: string, action: string, description: string}>} Patch plan items
+ */
+function extractPatchPlan(content) {
+  const sections = parseSections(content);
+
+  // Try different section names
+  const patchContent = sections.get('Implementation Plan') ||
+                       sections.get('Patch Plan') ||
+                       sections.get('Fix Plan');
+
+  if (!patchContent) {
+    return [];
+  }
+
+  const patchItems = [];
+  const lines = patchContent.split('\n');
+
+  // Pattern 1: "- `path/to/file.ts` - description"
+  // Pattern 2: "- path/to/file.ts: description"
+  // Pattern 3: "| path/to/file.ts | action | description |" (table)
+  // Pattern 4: File paths with action keywords (new, modify, delete)
+
+  for (const line of lines) {
+    // Skip empty lines and headers
+    if (!line.trim() || line.startsWith('#')) continue;
+
+    // Pattern 1: Backtick wrapped paths
+    const backtickMatch = line.match(/`([^`]+\.\w+)`\s*[-:]?\s*(.*)/);
+    if (backtickMatch) {
+      const filePath = backtickMatch[1];
+      const description = backtickMatch[2] || '';
+      const action = detectAction(line, description);
+      patchItems.push({ file: filePath, action, description: description.trim() });
+      continue;
+    }
+
+    // Pattern 2: File path with extension
+    const fileMatch = line.match(/[-*]\s*(\S+\.\w{1,5})\s*[-:]?\s*(.*)/);
+    if (fileMatch) {
+      const filePath = fileMatch[1];
+      const description = fileMatch[2] || '';
+      const action = detectAction(line, description);
+      patchItems.push({ file: filePath, action, description: description.trim() });
+      continue;
+    }
+
+    // Pattern 3: Table row
+    const tableMatch = line.match(/\|\s*(\S+\.\w+)\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|/);
+    if (tableMatch) {
+      patchItems.push({
+        file: tableMatch[1],
+        action: tableMatch[2].toLowerCase(),
+        description: tableMatch[3].trim()
+      });
+      continue;
+    }
+  }
+
+  return patchItems;
+}
+
+/**
+ * Helper: Detect action type from line content
+ */
+function detectAction(line, description) {
+  const text = (line + ' ' + description).toLowerCase();
+
+  if (text.includes('new file') || text.includes('create') || text.includes('add new')) {
+    return 'create';
+  }
+  if (text.includes('delete') || text.includes('remove')) {
+    return 'delete';
+  }
+  if (text.includes('rename') || text.includes('move')) {
+    return 'rename';
+  }
+  return 'modify';
+}
+
+/**
+ * Extract cook ID from artifact content or filename
+ *
+ * @param {string} filenameOrContent - Filename or content
+ * @returns {string|null} Cook ID
+ */
+function extractCookId(filenameOrContent) {
+  // Try filename pattern first: slug.YYYY-MM-DD.cook.md
+  const filenameMatch = filenameOrContent.match(/([^/]+)\.(\d{4}-\d{2}-\d{2})\.cook\.md/);
+  if (filenameMatch) {
+    return `${filenameMatch[1]}.${filenameMatch[2]}`;
+  }
+
+  // Try to find cook tag in content
+  const tagMatch = filenameOrContent.match(/\[cook:([^\]]+)\]/);
+  if (tagMatch) {
+    return tagMatch[1];
+  }
+
+  return null;
+}
+
+/**
+ * Update artifact status field
+ *
+ * @param {string} content - Raw markdown content
+ * @param {string} newStatus - New status value
+ * @returns {string} Updated content
+ */
+function updateArtifactStatus(content, newStatus) {
+  // Replace status in ## Status section
+  const statusRegex = /^(## Status\s*\n+)(\w[\w-]*)/m;
+  const match = content.match(statusRegex);
+
+  if (match) {
+    return content.replace(statusRegex, `$1${newStatus}`);
+  }
+
+  return content;
+}
+
+/**
+ * Add changelog entry to artifact
+ *
+ * @param {string} content - Raw markdown content
+ * @param {string} entry - Changelog entry text
+ * @returns {string} Updated content
+ */
+function addChangelogEntry(content, entry) {
+  const date = new Date().toISOString().split('T')[0];
+  const newEntry = `${date}: ${entry}`;
+
+  // Find Changelog section
+  const changelogRegex = /^(## Changelog\s*\n)/m;
+  const match = content.match(changelogRegex);
+
+  if (match) {
+    // Insert after heading
+    const insertPos = match.index + match[0].length;
+    return content.slice(0, insertPos) + newEntry + '\n' + content.slice(insertPos);
+  } else {
+    // Create Changelog section at end
+    return content + '\n\n## Changelog\n' + newEntry + '\n';
+  }
+}
+
 module.exports = {
   parseHeader,
   parseSections,
@@ -269,5 +655,13 @@ module.exports = {
   diffSections,
   generateModificationSummary,
   filterChangelogByDate,
-  parseArtifact
+  parseArtifact,
+
+  // New execution mode functions
+  parseImplementationStatus,
+  updateImplementationStatus,
+  extractPatchPlan,
+  extractCookId,
+  updateArtifactStatus,
+  addChangelogEntry
 };

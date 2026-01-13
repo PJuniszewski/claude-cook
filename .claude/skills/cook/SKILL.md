@@ -39,6 +39,14 @@ Every dish must be properly prepared before serving.
   Launch interactive menu for artifact management.
   Example: `/cook --interactive`
 
+- **implement** (boolean, default: false)
+  After planning, automatically start implementation (create branch, code, commit).
+  Example: `/cook Add feature --implement`
+
+- **create-pr** (boolean, default: false)
+  After planning and implementation, create PR automatically.
+  Example: `/cook Add feature --create-pr`
+
 ---
 
 ## Interactive Mode
@@ -216,8 +224,11 @@ Every feature progresses through these stages:
 | `blocked` | Specific blocker identified (requires owner + next step) |
 | `needs-more-cooking` | Rejected, incomplete, or killed (+ reason field) |
 | `well-done` | Approved and ready to implement |
+| `planned` | Artifact complete, awaiting implementation (with --implement/--create-pr) |
+| `implementing` | Implementation in progress (branch created, coding active) |
+| `pr-ready` | PR created and linked, awaiting review/merge |
 | `ready-for-merge` | Post QA/Security, ready for merge |
-| `plated` | Shipped to production |
+| `plated` | Shipped to production (PR merged) |
 
 **Note:** `killed` is NOT a separate status. Use `needs-more-cooking` with `reason: killed - <why>`
 
@@ -720,3 +731,533 @@ To validate an existing artifact without re-cooking:
 ```
 /cook --validate cook/existing-artifact.cook.md
 ```
+
+---
+
+## Execution Mode (Code-Artifact Linking)
+
+By default, `/cook` only creates a plan artifact without touching the repository.
+Use execution flags to opt-in to automatic implementation.
+
+### Safe by Default
+
+```
+/cook Add feature        # Plan only (default) - no repo changes
+/cook Add feature --implement   # Plan + implement
+/cook Add feature --create-pr   # Plan + implement + PR
+```
+
+**Important:** Without `--implement` or `--create-pr`, cook never:
+- Creates branches
+- Writes code
+- Makes commits
+- Pushes to remote
+- Creates PRs
+
+### --implement Flag
+
+After planning completes successfully:
+
+1. **Create branch**: `cook/<slug>` (or detect existing)
+2. **Implement**: Follow Patch Plan from artifact
+3. **Commit**: Tag all commits with `[cook:<cook_id>]`
+4. **Update artifact**: Add Implementation Status section
+5. **Transition status**: `planned → implementing`
+
+### --create-pr Flag
+
+Does everything `--implement` does, plus:
+
+1. **Push branch** to remote
+2. **Create PR** using artifact summary as description
+3. **Link PR** in artifact Implementation Status
+4. **Auto-verify** before PR (see below)
+5. **Transition status**: `implementing → pr-ready`
+
+### Natural Language Triggers
+
+After planning (without flags), users can trigger execution via natural language:
+
+| Phrase | Action | Checkpoint |
+|--------|--------|------------|
+| "implement it" / "start coding" | `--implement` | Yes (confirmation required) |
+| "ship it" / "create PR" / "push" | `--create-pr` | Yes (auto-verify first) |
+
+**Why This Is Dangerous:**
+
+Natural language triggers mean:
+- LLM interprets intent → real repo mutations
+- One Slack message could create a PR
+- Ambiguous phrases may trigger unintended actions
+
+**Mandatory Checkpoint Protocol:**
+
+Every natural language trigger MUST:
+
+1. **Echo the full plan** (not just summary)
+2. **Show exact mutations** (files, branch, commits)
+3. **Require explicit Y/n** (no default, no timeout)
+4. **Log the trigger** (for audit trail)
+
+**Checkpoint Confirmation Example (Full):**
+
+```
+User: "implement it"
+
+Claude: ⚠️ EXECUTION CHECKPOINT
+
+You're about to trigger implementation for: user-auth.2026-01-12
+
+📋 PLAN SUMMARY:
+   Artifact: cook/user-auth.2026-01-12.cook.md
+   Goal: Add user authentication with JWT tokens
+
+🔀 REPO MUTATIONS:
+   Branch: cook/user-auth (will be created)
+   Files to modify:
+     • src/auth/login.ts (new file)
+     • src/auth/logout.ts (new file)
+     • src/auth/middleware.ts (modify)
+     • src/routes/index.ts (modify)
+     • tests/auth.test.ts (new file)
+
+📝 COMMITS:
+   All commits will be tagged: [cook:user-auth.2026-01-12]
+
+⚠️ This will modify your repository. This action is logged.
+
+Proceed? [Y/n] (no default - you must type Y or n)
+```
+
+**Rejected Triggers:**
+
+Some phrases are too ambiguous and will be rejected:
+
+```
+User: "do it"
+
+Claude: ⚠️ Ambiguous trigger. Please be specific:
+- "implement it" - create branch and write code
+- "ship it" - implement + create PR
+- "review it" - just verify the plan
+
+What would you like to do?
+```
+
+**Audit Log Entry:**
+
+Every trigger is logged in artifact:
+
+```markdown
+## Changelog
+- 2026-01-12 14:30: Execution triggered via natural language
+  - Trigger: "implement it"
+  - Confirmed: Y
+  - User: (session context)
+```
+
+### Auto-Verify Before PR
+
+Before creating a PR, automatically verify implementation matches plan:
+
+```
+Verifying implementation against Patch Plan...
+
+Coverage:
+✓ src/auth/login.ts (planned → changed)
+✓ src/auth/logout.ts (planned → changed)
+✗ src/auth/session.ts (planned → NOT changed)
+⚠ src/utils/crypto.ts (NOT planned → changed)
+
+TODO scan:
+⚠ 2 TODOs found in changed files
+
+Verdict: PARTIAL MATCH (4/5 files, 1 unplanned change)
+
+Options:
+1. Create PR anyway (with warnings noted)
+2. Fix missing implementation first
+3. Abort
+```
+
+### State Tracking
+
+Cook state is tracked in `.claude/cook-state.json`:
+
+```json
+{
+  "active": "user-auth.2026-01-12",
+  "cooks": {
+    "user-auth.2026-01-12": {
+      "artifact": "cook/user-auth.2026-01-12.cook.md",
+      "status": "implementing",
+      "branch": "cook/user-auth",
+      "commits": ["abc123", "def456"],
+      "pr": null,
+      "created": "2026-01-12T10:00:00Z",
+      "updated": "2026-01-12T14:30:00Z"
+    }
+  }
+}
+```
+
+**State Rules:**
+- **Active cook**: Last `/cook` wins; explicit mention overrides
+- **Auto-cleanup**: Completed cooks (plated) archived after 30 days
+- **Manual override**: User can switch active cook by mentioning artifact name
+
+### Cook Status Command
+
+Optional escape hatch to see all active cooks:
+
+```
+/cook status
+```
+
+Output:
+```
+Active Cooks:
+┌─────────────────────────┬─────────────┬────────────────┬────────┐
+│ Artifact                │ Status      │ Branch         │ PR     │
+├─────────────────────────┼─────────────┼────────────────┼────────┤
+│ user-auth.2026-01-12    │ implementing│ cook/user-auth │ -      │
+│ dark-mode.2026-01-11    │ pr-ready    │ cook/dark-mode │ #42    │
+│ api-refactor.2026-01-10 │ plated      │ (merged)       │ #38 ✓  │
+└─────────────────────────┴─────────────┴────────────────┴────────┘
+
+Active: user-auth.2026-01-12
+```
+
+### Implementation Status Section
+
+Added to artifact automatically when using execution flags:
+
+```markdown
+## Implementation Status
+- Status: planned | implementing | pr-ready | plated
+- Branch: cook/user-auth (auto-created)
+- PR: #42 (https://github.com/...)
+- Commits: 5 [cook:user-auth.2026-01-12]
+- Coverage: 5/5 planned files ✓
+- Unplanned changes: none
+- Last activity: 2026-01-12 14:30
+```
+
+### Commit Message Format
+
+All commits created by cook include the cook ID:
+
+```
+feat: add login form [cook:user-auth.2026-01-12]
+
+Implements login form component per Patch Plan.
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+### Scope Creep Detection
+
+If user requests changes outside the active cook's scope:
+
+```
+User: "also add password reset"
+
+Claude: ⚠️ Password reset is not in the current cook plan (user-auth).
+
+Options:
+1. Re-cook: Update user-auth scope to include password reset (Recommended)
+2. New cook: Create separate cook for password-reset
+
+Which approach? [1/2]
+```
+
+**Important:** "Untracked" option is NOT offered by default.
+
+**Why No Untracked Option?**
+
+If given the choice, users will choose the fastest path:
+- Untracked = one word
+- Re-cook = wait for artifact update
+- New cook = new planning phase
+
+Result: Scope creep tracking becomes useless.
+
+**Forcing Untracked (Escape Hatch)**
+
+Users who really need untracked changes must be explicit:
+
+```
+User: "add password reset --force-untracked"
+
+Claude: ⚠️ UNTRACKED CHANGE WARNING
+
+This change will NOT be linked to any cook artifact.
+- No audit trail
+- No verification against plan
+- May cause scope confusion
+
+Proceeding with untracked change...
+```
+
+**Untracked Warning in Artifact:**
+
+If `--force-untracked` used, add visible warning:
+
+```markdown
+## Implementation Status
+- Status: implementing
+- Branch: cook/user-auth
+- ⚠️ UNTRACKED CHANGES DETECTED:
+  - password-reset functionality (forced via --force-untracked)
+  - Not part of original scope
+  - Recommend: create separate cook or re-cook
+```
+
+If user chooses (1) Re-cook:
+- Update artifact with new scope
+- Regenerate Patch Plan
+- Continue implementation
+
+If user chooses (2) New cook:
+- Create new artifact for new feature
+- Can work in parallel on different branch
+- Or queue for after current cook completes
+
+### Status Transitions
+
+```
+┌──────────┐     ┌─────────────┐     ┌──────────┐     ┌────────┐
+│ planned  │────>│implementing │────>│ pr-ready │────>│ plated │
+└──────────┘     └─────────────┘     └──────────┘     └────────┘
+     │                  │                  │
+     │                  │                  │
+     v                  v                  v
+┌─────────────────────────────────────────────────────────────┐
+│                    needs-more-cooking                        │
+│              (blocked, killed, or failed)                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Transition Rules:**
+- `planned → implementing`: When `--implement` starts or user confirms "implement it"
+- `implementing → pr-ready`: When PR created successfully
+- `pr-ready → plated`: When PR merged (detected via `gh pr status` or manual update)
+- Any → `needs-more-cooking`: When blocked, killed, or verification fails
+
+### Source of Truth Hierarchy
+
+When artifact, state, and git diverge — who wins?
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. ARTIFACT (.cook.md)    ← Single Source of Truth         │
+│     - Intent, scope, decisions, plan                        │
+│     - Human-readable, version-controlled                    │
+│     - Always authoritative for "what should be done"        │
+├─────────────────────────────────────────────────────────────┤
+│  2. GIT (branch/commits)   ← Evidence                       │
+│     - What WAS actually done                                │
+│     - Immutable history                                     │
+│     - Used for verification, not decision-making            │
+├─────────────────────────────────────────────────────────────┤
+│  3. STATE (.cook-state.json) ← Runtime Cache                │
+│     - Ephemeral, reconstructible                            │
+│     - Can be deleted and rebuilt from artifact + git        │
+│     - Never authoritative                                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Conflict Resolution Rules:**
+
+| Scenario | Resolution |
+|----------|------------|
+| Artifact says "planned", state says "implementing" | Trust artifact, rebuild state from git evidence |
+| Git has commits not in state | Scan commits for `[cook:id]` tag, rebuild state |
+| State references deleted artifact | Remove from state, warn user |
+| PR merged but artifact says "pr-ready" | Update artifact to "plated" (git wins for completion) |
+
+**State Reconstruction:**
+
+If `.cook-state.json` is corrupted or missing:
+
+```bash
+# Cook can rebuild state from:
+1. Scan cook/*.cook.md for artifacts
+2. Parse Implementation Status section
+3. Match branches via cook/<slug> pattern
+4. Scan commits for [cook:id] tags
+5. Query PRs via `gh pr list`
+```
+
+**Why This Matters:**
+
+Without clear hierarchy:
+- Debugging becomes nightmare ("which one is right?")
+- Merge conflicts in state file cause data loss
+- Recovery from errors is unclear
+
+### Semantic Verification (LLM-Judge)
+
+**Problem:** File coverage ≠ correct implementation
+
+```
+Coverage: 5/5 planned files ✓
+```
+
+This only proves files were touched, not that:
+- Logic is correct
+- Edge cases handled
+- Feature actually works
+
+**Solution:** Two-layer verification before PR
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1: Structural Verification (existing)                │
+│  ✓ File coverage (planned vs changed)                       │
+│  ✓ TODO scan                                                │
+│  ✓ Unplanned changes detection                              │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 2: Semantic Verification (LLM-Judge)                 │
+│  For each Patch Plan item, verify:                          │
+│  • Does implementation match stated intent?                 │
+│  • Are acceptance criteria satisfiable?                     │
+│  • Any obvious logic errors?                                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Semantic Verification Output:**
+
+```
+Semantic Verification (LLM-Judge):
+
+1. "Add login form with email/password fields"
+   ✓ PASS - LoginForm component has email and password inputs
+
+2. "Validate email format before submit"
+   ✓ PASS - validateEmail() called in handleSubmit
+
+3. "Show error message on invalid credentials"
+   ⚠ PARTIAL - Error shown, but generic message only
+     Suggestion: Use specific error from API response
+
+4. "Redirect to dashboard after success"
+   ✗ FAIL - No redirect logic found in handleSubmit
+     Expected: router.push('/dashboard') or similar
+
+Semantic Score: 2/4 PASS, 1 PARTIAL, 1 FAIL
+Verdict: NEEDS WORK - address FAIL items before PR
+```
+
+**Verdict Levels:**
+
+| Verdict | Criteria | Action |
+|---------|----------|--------|
+| `READY` | All items PASS | Proceed to PR |
+| `NEEDS REVIEW` | All PASS but has PARTIAL | PR with warnings |
+| `NEEDS WORK` | Any FAIL | Block PR, fix first |
+
+**Why Not Just Coverage?**
+
+| Scenario | Coverage Says | Reality |
+|----------|--------------|---------|
+| Empty function added | ✓ file changed | ✗ nothing implemented |
+| Wrong logic | ✓ file changed | ✗ bug introduced |
+| Missing error handling | ✓ file changed | ✗ crashes on edge case |
+| Copy-paste wrong code | ✓ file changed | ✗ doesn't match intent |
+
+**Performance Note:**
+
+Semantic verification adds ~10-30 seconds per PR check. Worth it for:
+- Catching obvious mistakes before human review
+- Reducing reviewer cognitive load
+- Building trust in automated implementation
+
+### Team Collaboration (Foreign Commits)
+
+**Problem:** Cook is designed for solo dev flow, but teams will use it.
+
+What happens when:
+- Teammate commits to cook branch?
+- Reviewer adds fixup commit?
+- CI bot modifies files?
+
+**Solution:** Foreign Commit Detection
+
+Commits without `[cook:<id>]` tag on a cook branch are marked as **foreign**:
+
+```
+Scanning cook/user-auth branch...
+
+Cook commits (tracked):
+  ✓ abc123 feat: add login form [cook:user-auth.2026-01-12]
+  ✓ def456 feat: add logout [cook:user-auth.2026-01-12]
+
+Foreign commits (untracked):
+  ⚠ ghi789 fix: typo in login (by @teammate)
+  ⚠ jkl012 ci: format files (by github-actions)
+
+Foreign commits: 2 (not part of cook tracking)
+```
+
+**Implementation Status with Foreign Commits:**
+
+```markdown
+## Implementation Status
+- Status: implementing
+- Branch: cook/user-auth
+- Commits: 5 [cook:user-auth.2026-01-12]
+- ⚠️ Foreign commits: 2
+  - ghi789: "fix: typo in login" (@teammate)
+  - jkl012: "ci: format files" (github-actions)
+- Coverage: 5/5 planned files ✓
+```
+
+**Rules for Foreign Commits:**
+
+| Rule | Behavior |
+|------|----------|
+| Detection | Scan for commits without `[cook:id]` tag |
+| Visibility | Show in Implementation Status, don't hide |
+| Blocking | Never block - just warn |
+| Attribution | Show author for context |
+| Verification | Include foreign changes in semantic verification |
+
+**Why Not Block Foreign Commits?**
+
+Blocking would:
+- Break normal team workflows
+- Force everyone to use cook
+- Make cook a bottleneck
+
+Instead:
+- Track them transparently
+- Include in verification
+- Let humans decide if they matter
+
+**PR Description with Foreign Commits:**
+
+When creating PR, disclose foreign commits:
+
+```markdown
+## Summary
+[cook-generated summary]
+
+## Implementation Notes
+- 5 commits tracked via cook
+- 2 foreign commits detected:
+  - @teammate: typo fix
+  - CI: auto-formatting
+
+---
+Generated from cook/user-auth.2026-01-12.cook.md
+```
+
+**Future Enhancement (not MVP):**
+
+For teams with heavy cook usage:
+- Optional: require team members to use `[cook:id]` tag
+- Optional: hook to warn on untagged commits to cook branches
+- Optional: aggregate foreign commits into cook tracking

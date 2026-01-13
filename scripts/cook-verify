@@ -1,0 +1,382 @@
+#!/usr/bin/env node
+
+/**
+ * cook-verify - Verification before PR creation
+ *
+ * Usage:
+ *   cook-verify <artifact-path>
+ *   cook-verify --active
+ *   cook-verify --create-pr <artifact-path>
+ *
+ * This script:
+ * 1. Runs structural verification (coverage)
+ * 2. Runs simplified semantic verification
+ * 3. Generates verification report
+ * 4. Optionally creates PR if verification passes
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const {
+  parseArtifact,
+  updateImplementationStatus,
+  addChangelogEntry,
+  parseSections
+} = require('./lib/artifactParser');
+
+const {
+  getActiveCook,
+  updateCook,
+  extractCookIdFromFilename,
+  extractSlugFromCookId
+} = require('./lib/stateManager');
+
+const {
+  isGitRepo,
+  getCurrentBranch,
+  isCookBranch,
+  pushBranch,
+  createPR,
+  findPRForBranch,
+  getCommitsForCook,
+  getForeignCommits,
+  getChangedFiles,
+  isGhAvailable
+} = require('./lib/gitOperations');
+
+const {
+  runStructuralVerification,
+  formatCoverageReport
+} = require('./lib/coverageChecker');
+
+const {
+  runSimplifiedVerification,
+  formatVerificationReport,
+  combineVerificationResults,
+  Verdict
+} = require('./lib/semanticVerifier');
+
+// Parse arguments
+const args = process.argv.slice(2);
+
+function printUsage() {
+  console.log(`
+cook-verify - Verify implementation before PR
+
+USAGE:
+  cook-verify <artifact-path>
+  cook-verify --active
+  cook-verify --create-pr <artifact-path>
+
+OPTIONS:
+  --artifact <path>   Path to cook artifact file
+  --active            Use active cook from state
+  --create-pr         Create PR after verification passes
+  --force             Create PR even with warnings
+  --json              Output as JSON
+  --help              Show this help
+
+EXAMPLE:
+  cook-verify cook/user-auth.2026-01-12.cook.md
+  cook-verify --create-pr --active
+`);
+}
+
+// Check for help
+if (args.includes('--help') || args.includes('-h')) {
+  printUsage();
+  process.exit(0);
+}
+
+// Parse options
+const createPRFlag = args.includes('--create-pr');
+const forceFlag = args.includes('--force');
+const jsonOutput = args.includes('--json');
+const useActive = args.includes('--active');
+
+let artifactPath = null;
+
+if (useActive) {
+  const activeCook = getActiveCook();
+  if (!activeCook) {
+    console.error('Error: No active cook found in state');
+    process.exit(1);
+  }
+  artifactPath = activeCook.artifact;
+} else {
+  // Find artifact path from args
+  const artifactIdx = args.indexOf('--artifact');
+  if (artifactIdx !== -1 && args[artifactIdx + 1]) {
+    artifactPath = args[artifactIdx + 1];
+  } else {
+    // First non-flag argument
+    artifactPath = args.find(a => !a.startsWith('--'));
+  }
+}
+
+if (!artifactPath) {
+  console.error('Error: No artifact path specified');
+  printUsage();
+  process.exit(1);
+}
+
+// Resolve path
+artifactPath = path.resolve(artifactPath);
+
+// Validate artifact exists
+if (!fs.existsSync(artifactPath)) {
+  console.error(`Error: Artifact not found: ${artifactPath}`);
+  process.exit(1);
+}
+
+// Check git repo
+if (!isGitRepo()) {
+  console.error('Error: Not in a git repository');
+  process.exit(1);
+}
+
+// Extract cook ID
+const cookId = extractCookIdFromFilename(artifactPath);
+const slug = extractSlugFromCookId(cookId);
+
+if (!jsonOutput) {
+  console.log('');
+  console.log('cook-verify');
+  console.log('===========');
+  console.log('');
+  console.log(`Artifact: ${path.basename(artifactPath)}`);
+  console.log(`Cook ID:  ${cookId}`);
+  console.log(`Branch:   ${getCurrentBranch()}`);
+  console.log('');
+}
+
+// Run structural verification
+if (!jsonOutput) {
+  console.log('Layer 1: Structural Verification');
+  console.log('---------------------------------');
+}
+
+const structuralResult = runStructuralVerification(artifactPath);
+
+if (!jsonOutput) {
+  console.log(structuralResult.report);
+  console.log('');
+}
+
+// Run simplified semantic verification
+if (!jsonOutput) {
+  console.log('Layer 2: Semantic Verification (Simplified)');
+  console.log('-------------------------------------------');
+}
+
+const semanticResult = runSimplifiedVerification(artifactPath);
+
+if (!jsonOutput) {
+  console.log(formatVerificationReport(semanticResult));
+  console.log('');
+}
+
+// Check for foreign commits
+const currentBranch = getCurrentBranch();
+const foreignCommits = isCookBranch(currentBranch)
+  ? getForeignCommits(currentBranch, cookId)
+  : [];
+
+if (!jsonOutput && foreignCommits.length > 0) {
+  console.log('Foreign Commits Detected');
+  console.log('------------------------');
+  for (const commit of foreignCommits) {
+    console.log(`  ⚠ ${commit.hash}: ${commit.message} (${commit.author})`);
+  }
+  console.log('');
+}
+
+// Combine results
+const combined = combineVerificationResults(
+  { ...structuralResult, verdict: structuralResult.verdict },
+  semanticResult
+);
+
+// JSON output
+if (jsonOutput) {
+  console.log(JSON.stringify({
+    artifact: artifactPath,
+    cookId,
+    branch: currentBranch,
+    structural: structuralResult,
+    semantic: semanticResult,
+    foreignCommits,
+    combined: combined.summary,
+    canProceed: combined.canProceed
+  }, null, 2));
+  process.exit(combined.canProceed ? 0 : 1);
+}
+
+// Final verdict
+console.log('Final Verdict');
+console.log('-------------');
+console.log(`Structural: ${structuralResult.verdict}`);
+console.log(`Semantic:   ${semanticResult.verdict}`);
+console.log(`Combined:   ${combined.combinedVerdict}`);
+console.log('');
+
+if (combined.combinedVerdict === Verdict.READY) {
+  console.log('✓ Verification PASSED - Ready for PR');
+} else if (combined.combinedVerdict === Verdict.NEEDS_REVIEW) {
+  console.log('⚠ Verification PASSED with warnings');
+} else {
+  console.log('✗ Verification FAILED - Fix issues before PR');
+}
+console.log('');
+
+// Handle PR creation
+if (createPRFlag) {
+  if (!combined.canProceed && !forceFlag) {
+    console.error('Cannot create PR: Verification failed');
+    console.error('Use --force to create PR anyway');
+    process.exit(1);
+  }
+
+  if (combined.combinedVerdict === Verdict.NEEDS_REVIEW && !forceFlag) {
+    console.warn('Warning: Creating PR with verification warnings');
+    console.warn('');
+  }
+
+  // Check if PR already exists
+  const existingPR = findPRForBranch(currentBranch);
+  if (existingPR) {
+    console.log(`PR already exists: #${existingPR.number}`);
+    console.log(`URL: ${existingPR.url}`);
+    process.exit(0);
+  }
+
+  // Push branch if needed
+  console.log('Pushing branch to remote...');
+  const pushed = pushBranch(currentBranch);
+  if (!pushed) {
+    console.error('Failed to push branch');
+    process.exit(1);
+  }
+  console.log('  ✓ Branch pushed');
+  console.log('');
+
+  // Build PR description
+  const artifact = parseArtifact(artifactPath);
+  const sections = parseSections(artifact.raw);
+
+  const dishSection = sections.get('Dish') || 'Implementation';
+  const scopeSection = sections.get('Scope') || '';
+
+  // Get commits
+  const cookCommits = getCommitsForCook(cookId, currentBranch);
+
+  let prBody = `## Summary\n\n${dishSection}\n\n`;
+
+  if (scopeSection) {
+    prBody += `## Scope\n\n${scopeSection.substring(0, 500)}\n\n`;
+  }
+
+  prBody += `## Implementation Notes\n\n`;
+  prBody += `- ${cookCommits.length} commits tracked via cook\n`;
+
+  if (foreignCommits.length > 0) {
+    prBody += `- ${foreignCommits.length} foreign commits detected:\n`;
+    for (const fc of foreignCommits.slice(0, 5)) {
+      prBody += `  - @${fc.author}: ${fc.message.substring(0, 50)}\n`;
+    }
+  }
+
+  prBody += `\n## Verification\n\n`;
+  prBody += `- Coverage: ${structuralResult.coverage?.formatted || 'N/A'}\n`;
+  prBody += `- Verdict: ${combined.combinedVerdict}\n`;
+
+  prBody += `\n---\nGenerated from [${path.basename(artifactPath)}](cook/${path.basename(artifactPath)})\n`;
+
+  const prTitle = dishSection.split('\n')[0].substring(0, 100);
+
+  // Check if gh CLI is available
+  if (!isGhAvailable()) {
+    console.log('');
+    console.log('GitHub CLI (gh) not available - showing manual PR instructions');
+    console.log('==============================================================');
+    console.log('');
+    console.log('1. Push your branch (if not already pushed):');
+    console.log(`   git push -u origin ${currentBranch}`);
+    console.log('');
+    console.log('2. Create PR manually at:');
+    console.log(`   https://github.com/<owner>/<repo>/compare/${currentBranch}?expand=1`);
+    console.log('');
+    console.log('3. Use this title:');
+    console.log(`   ${prTitle}`);
+    console.log('');
+    console.log('4. Use this body (copy below the line):');
+    console.log('─'.repeat(60));
+    console.log(prBody);
+    console.log('─'.repeat(60));
+    console.log('');
+    console.log('5. After creating PR, update artifact manually or run:');
+    console.log(`   Update the ## Implementation Status section with PR link`);
+    console.log('');
+    console.log('To install GitHub CLI:');
+    console.log('   brew install gh && gh auth login');
+    console.log('');
+    process.exit(0);
+  }
+
+  // Create PR with gh CLI
+  console.log('Creating PR...');
+
+  try {
+    const pr = createPR({
+      title: prTitle,
+      body: prBody,
+      branch: currentBranch
+    });
+
+    console.log(`  ✓ PR created: #${pr.number}`);
+    console.log(`  URL: ${pr.url}`);
+    console.log('');
+
+    // Update artifact with PR info
+    let content = fs.readFileSync(artifactPath, 'utf-8');
+    content = updateImplementationStatus(content, {
+      execution: 'pr-ready',
+      branch: currentBranch,
+      pr: pr.number,
+      prUrl: pr.url,
+      commits: cookCommits.length,
+      cookTag: cookId,
+      coverage: structuralResult.coverage?.formatted,
+      foreignCommits: foreignCommits.map(fc => `${fc.hash}: "${fc.message}" (${fc.author})`)
+    });
+    content = addChangelogEntry(content, `PR created: #${pr.number}`);
+    fs.writeFileSync(artifactPath, content, 'utf-8');
+
+    // Update state
+    updateCook(cookId, {
+      status: 'pr-ready',
+      pr: { number: pr.number, url: pr.url }
+    });
+
+    console.log('Artifact and state updated.');
+
+  } catch (error) {
+    console.error(`Failed to create PR: ${error.message}`);
+    console.error('');
+    console.error('Fallback: Create PR manually at:');
+    console.error(`  https://github.com/<owner>/<repo>/compare/${currentBranch}?expand=1`);
+    process.exit(1);
+  }
+} else {
+  // No PR creation, just show next steps
+  if (combined.canProceed) {
+    console.log('Next steps:');
+    console.log(`  cook-verify --create-pr ${path.basename(artifactPath)}`);
+  } else {
+    console.log('Fix the issues above, then run verification again.');
+  }
+}
+
+console.log('');
+process.exit(combined.canProceed ? 0 : 1);

@@ -1,0 +1,249 @@
+#!/usr/bin/env node
+
+/**
+ * cook-status - Show status of all cooks
+ *
+ * Usage:
+ *   cook-status
+ *   cook-status --json
+ *   cook-status --active
+ *   cook-status --rebuild
+ *
+ * This script:
+ * 1. Lists all active cooks from state
+ * 2. Shows branch, PR, status for each
+ * 3. Highlights the active cook
+ */
+
+const path = require('path');
+
+const {
+  loadState,
+  listCooks,
+  getActiveCook,
+  rebuildState,
+  archiveCook,
+  autoCleanup
+} = require('./lib/stateManager');
+
+const {
+  getCurrentBranch,
+  isCookBranch,
+  findPRForBranch,
+  isPRMerged
+} = require('./lib/gitOperations');
+
+// Parse arguments
+const args = process.argv.slice(2);
+
+function printUsage() {
+  console.log(`
+cook-status - Show status of all cooks
+
+USAGE:
+  cook-status
+  cook-status --active
+  cook-status --rebuild
+  cook-status --cleanup
+
+OPTIONS:
+  --active    Show only the active cook
+  --rebuild   Rebuild state from artifacts and git
+  --cleanup   Archive old plated cooks
+  --json      Output as JSON
+  --help      Show this help
+
+EXAMPLE:
+  cook-status
+  cook-status --rebuild
+`);
+}
+
+// Check for help
+if (args.includes('--help') || args.includes('-h')) {
+  printUsage();
+  process.exit(0);
+}
+
+const jsonOutput = args.includes('--json');
+const showActiveOnly = args.includes('--active');
+const doRebuild = args.includes('--rebuild');
+const doCleanup = args.includes('--cleanup');
+
+// Handle rebuild
+if (doRebuild) {
+  if (!jsonOutput) {
+    console.log('Rebuilding state from artifacts and git...');
+  }
+
+  const state = rebuildState();
+
+  if (!jsonOutput) {
+    console.log(`  ✓ Found ${Object.keys(state.cooks).length} cooks`);
+    console.log(`  ✓ Active: ${state.active || 'none'}`);
+    console.log('');
+  }
+}
+
+// Handle cleanup
+if (doCleanup) {
+  if (!jsonOutput) {
+    console.log('Cleaning up old plated cooks...');
+  }
+
+  const archived = autoCleanup(30);
+
+  if (!jsonOutput) {
+    if (archived.length > 0) {
+      console.log(`  ✓ Archived ${archived.length} cooks:`);
+      for (const id of archived) {
+        console.log(`    - ${id}`);
+      }
+    } else {
+      console.log('  ✓ No cooks to archive');
+    }
+    console.log('');
+  }
+}
+
+// Get current state
+const state = loadState();
+const currentBranch = getCurrentBranch();
+
+// Show active only
+if (showActiveOnly) {
+  const active = getActiveCook();
+
+  if (!active) {
+    if (jsonOutput) {
+      console.log(JSON.stringify({ active: null }));
+    } else {
+      console.log('No active cook');
+    }
+    process.exit(0);
+  }
+
+  if (jsonOutput) {
+    console.log(JSON.stringify(active, null, 2));
+  } else {
+    console.log('Active Cook');
+    console.log('===========');
+    console.log('');
+    console.log(`ID:       ${active.id}`);
+    console.log(`Artifact: ${path.basename(active.artifact)}`);
+    console.log(`Status:   ${active.status}`);
+    console.log(`Branch:   ${active.branch || 'not created'}`);
+    if (active.pr) {
+      console.log(`PR:       #${active.pr.number} (${active.pr.url})`);
+    }
+    console.log(`Commits:  ${active.commits?.length || 0}`);
+    console.log(`Updated:  ${active.updated}`);
+  }
+  process.exit(0);
+}
+
+// List all cooks
+const cooks = listCooks();
+
+if (jsonOutput) {
+  console.log(JSON.stringify({
+    active: state.active,
+    currentBranch,
+    cooks,
+    archived: Object.keys(state.archived || {}).length
+  }, null, 2));
+  process.exit(0);
+}
+
+// Pretty print
+console.log('');
+console.log('cook-status');
+console.log('===========');
+console.log('');
+console.log(`Current branch: ${currentBranch}`);
+if (isCookBranch(currentBranch)) {
+  console.log(`  (cook branch)`);
+}
+console.log('');
+
+if (cooks.length === 0) {
+  console.log('No active cooks');
+  console.log('');
+  console.log('Run /cook to start a new cook');
+  process.exit(0);
+}
+
+// Table header
+console.log('Active Cooks:');
+console.log('');
+
+// Calculate column widths
+const maxIdLen = Math.max(8, ...cooks.map(c => c.id.length));
+const maxStatusLen = Math.max(6, ...cooks.map(c => c.status.length));
+const maxBranchLen = Math.max(6, ...cooks.map(c => (c.branch || '-').length));
+
+// Print header
+const header = [
+  'ID'.padEnd(maxIdLen),
+  'Status'.padEnd(maxStatusLen),
+  'Branch'.padEnd(maxBranchLen),
+  'PR',
+  'Commits'
+].join(' │ ');
+
+const separator = [
+  '─'.repeat(maxIdLen),
+  '─'.repeat(maxStatusLen),
+  '─'.repeat(maxBranchLen),
+  '──────',
+  '───────'
+].join('─┼─');
+
+console.log('┌' + separator.replace(/─┼─/g, '─┬─') + '┐');
+console.log('│ ' + header + ' │');
+console.log('├' + separator + '┤');
+
+// Print rows
+for (const cook of cooks) {
+  const isActive = cook.id === state.active;
+  const marker = isActive ? '→' : ' ';
+
+  const prDisplay = cook.pr
+    ? `#${cook.pr.number}`.padEnd(6)
+    : '-'.padEnd(6);
+
+  const row = [
+    cook.id.padEnd(maxIdLen),
+    cook.status.padEnd(maxStatusLen),
+    (cook.branch || '-').padEnd(maxBranchLen),
+    prDisplay,
+    String(cook.commits?.length || 0).padEnd(7)
+  ].join(' │ ');
+
+  console.log(`│${marker}${row} │`);
+}
+
+console.log('└' + separator.replace(/─┼─/g, '─┴─') + '┘');
+console.log('');
+
+// Show active indicator
+if (state.active) {
+  console.log(`Active: ${state.active}`);
+}
+
+// Show archived count
+const archivedCount = Object.keys(state.archived || {}).length;
+if (archivedCount > 0) {
+  console.log(`Archived: ${archivedCount} cooks`);
+}
+
+console.log('');
+
+// Status legend
+console.log('Status Legend:');
+console.log('  planned      - Artifact created, awaiting implementation');
+console.log('  implementing - Implementation in progress');
+console.log('  pr-ready     - PR created, awaiting review');
+console.log('  plated       - PR merged, cook complete');
+console.log('  needs-more-cooking - Blocked or requires changes');
+console.log('');

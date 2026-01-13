@@ -13,6 +13,9 @@ Thumbs.db
 # Local Claude settings (user-specific)
 .claude/settings.local.json
 
+# Cook state (runtime cache, reconstructible)
+.claude/cook-state.json
+
 # Generated artifacts (optional - uncomment to ignore)
 # cook/*.cook.md
 
