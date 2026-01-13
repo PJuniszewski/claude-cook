@@ -1,7 +1,7 @@
 {
   "name": "cook",
-  "version": "1.0.0",
-  "description": "Feature development with guardrails. Plan → Review → Code → Ship.",
+  "version": "2.0.0",
+  "description": "Feature development with guardrails. Plan → Review → Code → Ship. Now with automatic implementation and PR creation.",
   "author": {
     "name": "Patryk Juniszewski",
     "email": "p.juniszewski@gmail.com"
