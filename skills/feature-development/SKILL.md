@@ -31,7 +31,6 @@ After cooking is complete, user will **separately** request implementation.
 **WRONG - do NOT include:**
 - ❌ Implementation
 - ❌ Write code
-- ❌ Add onClick
 - ❌ Any coding step
 
 ---
