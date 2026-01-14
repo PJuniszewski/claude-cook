@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "active": "test-artifact-linking.2026-01-13",
+  "cooks": {
+    "test-artifact-linking.2026-01-13": {
+      "id": "test-artifact-linking.2026-01-13",
+      "artifact": "/Users/patrykjuniszewski/claude-cook/cook/test-artifact-linking.2026-01-13.cook.md",
+      "status": "pr-ready",
+      "branch": "cook/test-artifact-linking",
+      "commits": [],
+      "pr": {
+        "number": 7,
+        "url": "https://github.com/PJuniszewski/claude-cook/pull/7"
+      },
+      "untrackedChanges": [],
+      "created": "2026-01-13T09:08:11.771Z",
+      "updated": "2026-01-13T09:14:26.633Z"
+    }
+  },
+  "archived": {},
+  "lastUpdated": "2026-01-13T09:14:26.633Z"
+}
