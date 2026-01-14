@@ -20,15 +20,28 @@ After cooking is complete, user will **separately** request implementation.
 
 ---
 
-## ⚠️ CRITICAL: FIRST ACTION REQUIRED
+## ⚡ IMMEDIATE FIRST ACTION - EXECUTE NOW
 
-**STOP. Before doing ANYTHING else, you MUST create the artifact file.**
+**Your VERY FIRST tool call MUST be Write to create the artifact file.**
 
-Your VERY FIRST action after receiving a /cook command must be:
+Execute this Write call IMMEDIATELY:
 
-1. **Generate filename:** `cook/<slug>.<YYYY-MM-DD>.cook.md`
-2. **Write skeleton artifact** using Write tool
-3. **Confirm file exists** before any exploration or analysis
+```
+Write(
+  file_path="cook/<feature-slug>.<YYYY-MM-DD>.cook.md",
+  content="<full skeleton below>"
+)
+```
+
+**BLOCKED ACTIONS until artifact exists:**
+- ❌ Read (any file)
+- ❌ Glob/Grep (any search)
+- ❌ Task/Explore (any agent)
+- ❌ Bash (any command)
+
+**ONLY ALLOWED first action:** Write artifact file.
+
+A PreToolUse hook will BLOCK other tools until artifact exists.
 
 ```markdown
 # Cooking Result
