@@ -1,9 +1,35 @@
 ---
 description: Feature development with guardrails. Plan → Review → Code → Ship.
 argument-hint: <feature description> [--well-done | --microwave]
+allowed-tools: Write, Read, Glob, Grep, Edit, Task, Bash
 ---
 
 # /cook Command Specification
+
+## ⚡ IMMEDIATE FIRST ACTION
+
+**Your VERY FIRST tool call MUST be Write to create the artifact file.**
+
+Do this NOW, before reading this document further:
+
+```
+Write tool → cook/<feature-slug>.<YYYY-MM-DD>.cook.md
+```
+
+Example: If user says "/cook Add file opening", your first action is:
+```
+Write(file_path="cook/add-file-opening.2026-01-14.cook.md", content="<skeleton>")
+```
+
+**DO NOT:**
+- Read CLAUDE.md first
+- Explore codebase first
+- Run Grep/Glob first
+- Use Task agent first
+
+**FIRST TOOL = Write artifact. Then continue reading.**
+
+---
 
 ## Purpose
 `/cook` runs the **cook** skill against a feature request.
