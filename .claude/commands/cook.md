@@ -11,6 +11,21 @@ argument-hint: <feature description> [--well-done | --microwave]
 It enforces a disciplined, multi-phase development process with proper review gates.
 Think of it as preparing a dish: ingredients must be fresh, cooking must be thorough, and plating must be precise.
 
+## ⛔ CRITICAL: NO CODE IMPLEMENTATION
+
+**`/cook` is PLANNING ONLY. Do NOT write any implementation code.**
+
+- NO adding files
+- NO modifying source code
+- NO creating new classes/functions
+- NO running tests on new code
+
+The ONLY output of `/cook` is the **artifact file** (`cook/*.cook.md`).
+
+After artifact is complete with status `well-done`, the user will **separately** request implementation.
+
+If you find yourself writing actual code (not just file paths in the plan), STOP immediately.
+
 ---
 
 ## Syntax
@@ -101,12 +116,252 @@ These statuses appear in cooking results and decision artifacts.
 
 ## Execution Contract
 
-When `/cook` is invoked, Claude Code MUST:
+When `/cook` is invoked, Claude Code MUST follow this EXACT sequence:
 
-1. Refuse to jump straight into coding (no raw code)
-2. Run cook skill
-3. Clearly label each cooking phase
-4. Produce final Cooking Result with status
+### Step 1: CREATE ARTIFACT FILE (MANDATORY FIRST ACTION)
+
+**Before ANY exploration, reading, or analysis**, create the artifact file:
+
+```bash
+# Filename format: cook/<slug>.<YYYY-MM-DD>.cook.md
+# Example: cook/open-files-chat-history.2026-01-14.cook.md
+```
+
+Use the Write tool to create this FULL skeleton:
+
+```markdown
+# Cooking Result
+
+## Dish
+<1-2 sentence description of what we're building>
+
+## Status
+raw
+
+## Cooking Mode
+well-done
+
+## Current Phase
+Step 0.0 - Artifact Created
+
+## Ownership
+- Decision Owner: _TBD_
+- Reviewers: _TBD_
+- Approved by: _TBD_
+
+---
+
+# Phase 0 - Project Policy & Context
+
+## Sources Scanned
+| File | Status | Key Rules |
+|------|--------|-----------|
+| CLAUDE.md | _Pending_ | |
+| README.md | _Pending_ | |
+| .claude/agents/*.md | _Pending_ | |
+
+## Hard Rules (must not be violated)
+_Pending..._
+
+## Preferred Patterns
+_Pending..._
+
+## Detected Conflicts
+_Pending..._
+
+## Policy Alignment Risk
+_Pending..._
+
+---
+
+# Step 1 - Read the Order
+
+## Feature Summary
+_Pending..._
+
+## Affected Modules/Components
+| Module | Impact | Risk Level |
+|--------|--------|------------|
+| | | |
+
+## Dependencies
+_Pending..._
+
+## Microwave Blocker Check
+_Pending..._
+
+---
+
+# Step 2 - Ingredient Approval (Product Review)
+
+## Product Decision
+_Pending: Approved / Rejected / Deferred_
+
+## Scope
+
+### In Scope
+- _Pending..._
+
+### Out of Scope
+- _Pending..._
+
+### Non-goals
+- _Pending..._
+
+## User Value
+_Pending..._
+
+## Assumptions
+- _Pending..._
+
+---
+
+# Step 3 - Presentation Planning (UX Review)
+
+## UX Decision
+_Pending: Required / Not Required_
+
+## User Flow
+_Pending..._
+
+## UI Components Affected
+| Component | Change Type | Notes |
+|-----------|-------------|-------|
+| | | |
+
+## Accessibility Considerations
+_Pending..._
+
+---
+
+# Step 4 - Implementation Plan
+
+## Architecture Decision
+
+### Selected Approach
+_Pending..._
+
+### Alternatives Considered
+| Option | Pros | Cons | Decision |
+|--------|------|------|----------|
+| Option A | | | Rejected: _reason_ |
+| Option B | | | **Selected**: _reason_ |
+
+### Trade-offs
+- Sacrificing: _what we give up_
+- Gaining: _what we get_
+
+## Patch Plan
+
+### Files to Modify
+| File | Change | Risk |
+|------|--------|------|
+| | | |
+
+### Commit Sequence
+1. _commit message_
+2. _commit message_
+
+### High-risk Areas
+- _area needing extra attention_
+
+---
+
+# Step 5 - QA Review
+
+## Test Plan
+
+### Test Cases
+| # | Scenario | Given | When | Then |
+|---|----------|-------|------|------|
+| 1 | Happy path | | | |
+| 2 | Edge case | | | |
+| 3 | Error case | | | |
+
+### Edge Cases
+- _edge case 1_
+- _edge case 2_
+
+### Acceptance Criteria
+- [ ] Given _context_, when _action_, then _result_
+- [ ] Given _context_, when _action_, then _result_
+
+### Regression Checks
+- _existing feature to verify_
+
+---
+
+# Step 6 - Security Review
+
+## Security Status
+- Reviewed: _yes/no_
+- Risk level: _low/medium/high_
+
+## Security Checklist
+| Check | Status | Notes |
+|-------|--------|-------|
+| Input validation | _Pending_ | |
+| Auth/authz | _Pending_ | |
+| Data exposure | _Pending_ | |
+| Injection vectors | _Pending_ | |
+
+## Issues Found
+_Pending..._
+
+---
+
+# Step 7 - Documentation
+
+## Documentation Updates
+| File | Change Needed |
+|------|---------------|
+| | |
+
+## New Documentation Needed
+_Pending..._
+
+---
+
+# Risk Management
+
+## Pre-mortem (3 scenarios required)
+| # | What Could Go Wrong | Likelihood | Impact | Mitigation |
+|---|---------------------|------------|--------|------------|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
+
+## Rollback Plan
+1. _step 1_
+2. _step 2_
+
+## Blast Radius
+- Affected users/modules: _list_
+- Feature flag: _yes/no (name)_
+- Rollout strategy: _immediate/gradual/canary_
+
+---
+
+# Decision Log
+
+| Date | Phase | Decision | Rationale |
+|------|-------|----------|-----------|
+| <today> | Step 0.0 | Artifact created | Starting cook flow |
+```
+
+**CRITICAL:** Do NOT proceed to Step 2 until artifact file exists.
+
+### Step 2: Execute cooking phases
+
+Only AFTER artifact exists:
+1. Run each cooking phase
+2. Update artifact after EACH phase
+3. Clearly label each cooking phase in output
+
+### Step 3: Finalize
+
+1. Update artifact status to final state
+2. Produce final Cooking Result summary
 
 ---
 
