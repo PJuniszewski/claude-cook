@@ -14,9 +14,25 @@ user-invocable: true
 - ❌ NO creating classes, functions, or components
 - ❌ NO running implementation tests
 - ❌ NO writing actual code beyond file path references
+- ❌ NO "Implementation" step in todo list
 - ✅ ONLY produce the artifact file (`cook/*.cook.md`)
 
 After cooking is complete, user will **separately** request implementation.
+
+**Correct todo list for /cook:**
+1. Create artifact file (FIRST!)
+2. Product review - scope & acceptance criteria
+3. UX review - interaction design
+4. Architecture review - technical approach
+5. Security review - risk assessment
+6. QA review - test plan
+7. Finalize artifact
+
+**WRONG - do NOT include:**
+- ❌ Implementation
+- ❌ Write code
+- ❌ Add onClick
+- ❌ Any coding step
 
 ---
 
