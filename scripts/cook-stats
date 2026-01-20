@@ -1,0 +1,375 @@
+#!/usr/bin/env node
+
+/**
+ * cook-stats - Analytics and insights for cook artifacts
+ *
+ * Usage:
+ *   ./scripts/cook-stats                    Show stats for all artifacts
+ *   ./scripts/cook-stats --since 2026-01-01 Filter by date
+ *   ./scripts/cook-stats --json             Output as JSON
+ *   ./scripts/cook-stats --rebuild          Force rebuild index
+ *   ./scripts/cook-stats search <query>     Search artifacts
+ *   ./scripts/cook-stats similar <file>...  Find similar by files touched
+ *   ./scripts/cook-stats timeline           Show recent activity
+ *
+ * Exit codes:
+ *   0 - Success
+ *   1 - Error
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { buildIndex, saveIndex, loadIndex } = require('./lib/indexer');
+const {
+  calculateStats,
+  formatStatsConsole,
+  findSimilarByFiles,
+  searchArtifacts,
+  getTimeline,
+  getStatusIcon
+} = require('./lib/analytics');
+
+// Default paths
+const COOK_DIR = path.resolve(process.cwd(), 'cook');
+const INDEX_PATH = path.resolve(process.cwd(), '.claude/data/cook-index.json');
+
+// Parse command line arguments
+function parseArgs(argv) {
+  const args = {
+    command: 'stats', // default command
+    since: null,
+    until: null,
+    json: false,
+    rebuild: false,
+    verbose: false,
+    help: false,
+    query: null,
+    files: [],
+    limit: 10
+  };
+
+  let i = 2;
+  while (i < argv.length) {
+    const arg = argv[i];
+
+    if (arg === '--help' || arg === '-h') {
+      args.help = true;
+    } else if (arg === '--json') {
+      args.json = true;
+    } else if (arg === '--rebuild') {
+      args.rebuild = true;
+    } else if (arg === '--verbose' || arg === '-v') {
+      args.verbose = true;
+    } else if (arg === '--since' && argv[i + 1]) {
+      args.since = argv[++i];
+    } else if (arg === '--until' && argv[i + 1]) {
+      args.until = argv[++i];
+    } else if (arg === '--limit' && argv[i + 1]) {
+      args.limit = parseInt(argv[++i]) || 10;
+    } else if (arg === 'search' && argv[i + 1]) {
+      args.command = 'search';
+      args.query = argv[++i];
+    } else if (arg === 'similar') {
+      args.command = 'similar';
+      // Collect remaining args as files
+      i++;
+      while (i < argv.length && !argv[i].startsWith('-')) {
+        args.files.push(argv[i++]);
+      }
+      i--; // Adjust for outer loop increment
+    } else if (arg === 'timeline') {
+      args.command = 'timeline';
+    } else if (arg === 'index') {
+      args.command = 'index';
+    }
+
+    i++;
+  }
+
+  return args;
+}
+
+// Print usage information
+function printUsage() {
+  console.log(`
+cook-stats - Analytics and insights for cook artifacts
+
+USAGE:
+  cook-stats                           Show statistics for all artifacts
+  cook-stats --since 2026-01-01        Filter stats by date range
+  cook-stats search <query>            Search artifacts by keyword
+  cook-stats similar <file1> <file2>   Find artifacts touching similar files
+  cook-stats timeline                  Show recent activity timeline
+  cook-stats index                     Rebuild the index
+
+OPTIONS:
+  --since DATE      Only include artifacts from this date (YYYY-MM-DD)
+  --until DATE      Only include artifacts until this date (YYYY-MM-DD)
+  --json            Output as JSON format
+  --rebuild         Force rebuild index before computing stats
+  --verbose, -v     Show detailed output
+  --limit N         Limit results (default: 10)
+  --help, -h        Show this help message
+
+EXAMPLES:
+  cook-stats
+  cook-stats --since 2026-01-01 --json
+  cook-stats search "authentication"
+  cook-stats similar src/auth.ts src/login.ts
+  cook-stats timeline --limit 20
+
+DATA:
+  Index stored at: .claude/data/cook-index.json
+  Artifacts from:  cook/*.cook.md
+`);
+}
+
+// Ensure index exists and is up to date
+function ensureIndex(args) {
+  // Check if index exists
+  let index = loadIndex(INDEX_PATH);
+
+  // Check if rebuild is needed
+  const needsRebuild = args.rebuild || !index ||
+    !fs.existsSync(COOK_DIR) ||
+    isIndexStale(index, COOK_DIR);
+
+  if (needsRebuild) {
+    if (!fs.existsSync(COOK_DIR)) {
+      return { artifacts: [], errors: [], stats: { total: 0, byStatus: {}, byMode: {}, byRisk: {} } };
+    }
+
+    if (args.verbose) {
+      console.error('Rebuilding index...');
+    }
+
+    index = buildIndex(COOK_DIR);
+    saveIndex(index, INDEX_PATH);
+
+    if (args.verbose) {
+      console.error(`Indexed ${index.artifacts.length} artifacts`);
+    }
+  }
+
+  return index;
+}
+
+// Check if index is stale (any artifact newer than index)
+function isIndexStale(index, cookDir) {
+  if (!index.generatedAt) return true;
+
+  const indexTime = new Date(index.generatedAt).getTime();
+
+  try {
+    const files = fs.readdirSync(cookDir).filter(f => f.endsWith('.cook.md'));
+    for (const file of files) {
+      const filePath = path.join(cookDir, file);
+      const stat = fs.statSync(filePath);
+      if (stat.mtimeMs > indexTime) {
+        return true;
+      }
+    }
+  } catch (err) {
+    return true;
+  }
+
+  return false;
+}
+
+// Command: show stats
+function cmdStats(args) {
+  const index = ensureIndex(args);
+
+  if (index.artifacts.length === 0) {
+    if (args.json) {
+      console.log(JSON.stringify({ total: 0, message: 'No cook artifacts found' }, null, 2));
+    } else {
+      console.log('No cook artifacts found in cook/ directory.');
+      console.log('Run /cook <feature> to create your first artifact.');
+    }
+    return;
+  }
+
+  const stats = calculateStats(index, {
+    since: args.since,
+    until: args.until
+  });
+
+  if (args.json) {
+    console.log(JSON.stringify(stats, null, 2));
+  } else {
+    console.log(formatStatsConsole(stats));
+  }
+}
+
+// Command: search artifacts
+function cmdSearch(args) {
+  const index = ensureIndex(args);
+
+  if (!args.query) {
+    console.error('Error: Search query required');
+    process.exit(1);
+  }
+
+  const results = searchArtifacts(index, args.query, { limit: args.limit });
+
+  if (args.json) {
+    console.log(JSON.stringify(results, null, 2));
+    return;
+  }
+
+  if (results.length === 0) {
+    console.log(`No artifacts found matching "${args.query}"`);
+    return;
+  }
+
+  console.log(`Found ${results.length} artifacts matching "${args.query}":`);
+  console.log('');
+
+  for (const { artifact, score, matches } of results) {
+    const icon = getStatusIcon(artifact.status);
+    console.log(`${icon} ${artifact.slug} (${artifact.date})`);
+    console.log(`   ${artifact.title || 'No title'}`);
+    console.log(`   Status: ${artifact.status} | Mode: ${artifact.mode}`);
+    if (args.verbose) {
+      console.log(`   Matched: ${matches.join(', ')}`);
+    }
+    console.log('');
+  }
+}
+
+// Command: find similar artifacts
+function cmdSimilar(args) {
+  const index = ensureIndex(args);
+
+  if (args.files.length === 0) {
+    console.error('Error: At least one file path required');
+    console.error('Usage: cook-stats similar <file1> [file2] ...');
+    process.exit(1);
+  }
+
+  const results = findSimilarByFiles(index, args.files, { limit: args.limit });
+
+  if (args.json) {
+    console.log(JSON.stringify(results, null, 2));
+    return;
+  }
+
+  if (results.length === 0) {
+    console.log('No similar artifacts found.');
+    console.log('Files searched:', args.files.join(', '));
+    return;
+  }
+
+  console.log(`Artifacts similar to files: ${args.files.join(', ')}`);
+  console.log('');
+
+  for (const { artifact, similarity, matchingFiles } of results) {
+    const icon = getStatusIcon(artifact.status);
+    console.log(`${icon} ${artifact.slug} (${similarity}% similar)`);
+    console.log(`   ${artifact.title || 'No title'}`);
+    console.log(`   Status: ${artifact.status} | Date: ${artifact.date}`);
+    if (args.verbose) {
+      console.log(`   Matching files: ${matchingFiles.join(', ')}`);
+    }
+    console.log('');
+  }
+}
+
+// Command: show timeline
+function cmdTimeline(args) {
+  const index = ensureIndex(args);
+
+  const events = getTimeline(index, { limit: args.limit });
+
+  if (args.json) {
+    console.log(JSON.stringify(events, null, 2));
+    return;
+  }
+
+  if (events.length === 0) {
+    console.log('No activity found.');
+    return;
+  }
+
+  console.log('📅 Recent Cook Activity');
+  console.log('─'.repeat(40));
+  console.log('');
+
+  let lastDate = null;
+  for (const event of events) {
+    if (event.date !== lastDate) {
+      console.log(`${event.date}`);
+      lastDate = event.date;
+    }
+
+    const typeIcon = event.type === 'created' ? '📝' : '📌';
+    const summary = event.type === 'created'
+      ? `Created: ${event.artifact}`
+      : `${event.artifact}: ${event.summary}`;
+    console.log(`  ${typeIcon} ${summary}`);
+  }
+}
+
+// Command: rebuild index
+function cmdIndex(args) {
+  if (!fs.existsSync(COOK_DIR)) {
+    console.error('Error: cook/ directory not found');
+    process.exit(1);
+  }
+
+  console.log('Building index...');
+  const index = buildIndex(COOK_DIR);
+  saveIndex(index, INDEX_PATH);
+
+  console.log(`Indexed ${index.artifacts.length} artifacts`);
+
+  if (index.errors.length > 0) {
+    console.log(`Errors: ${index.errors.length}`);
+    for (const err of index.errors) {
+      console.log(`  - ${err.file}: ${err.error}`);
+    }
+  }
+
+  console.log(`Index saved to: ${INDEX_PATH}`);
+}
+
+// Main function
+function main() {
+  const args = parseArgs(process.argv);
+
+  if (args.help) {
+    printUsage();
+    process.exit(0);
+  }
+
+  try {
+    switch (args.command) {
+      case 'stats':
+        cmdStats(args);
+        break;
+      case 'search':
+        cmdSearch(args);
+        break;
+      case 'similar':
+        cmdSimilar(args);
+        break;
+      case 'timeline':
+        cmdTimeline(args);
+        break;
+      case 'index':
+        cmdIndex(args);
+        break;
+      default:
+        cmdStats(args);
+    }
+  } catch (err) {
+    console.error(`Error: ${err.message}`);
+    if (args.verbose) {
+      console.error(err.stack);
+    }
+    process.exit(1);
+  }
+}
+
+main();

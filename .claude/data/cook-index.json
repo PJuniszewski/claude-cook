@@ -1,0 +1,167 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-01-20T22:12:35.927Z",
+  "cookDir": "/Users/patrykjuniszewski/claude-cook/cook",
+  "artifacts": [
+    {
+      "path": "/Users/patrykjuniszewski/claude-cook/cook/cook-flow-enforcement.2026-01-14.cook.md",
+      "filename": "cook-flow-enforcement.2026-01-14.cook.md",
+      "slug": "cook-flow-enforcement",
+      "date": "2026-01-14",
+      "status": "well-done",
+      "mode": "well-done",
+      "title": "Fix: `/cook` command does not consistently follow Phase 0-7 flow",
+      "owner": null,
+      "filesTouched": [],
+      "riskLevel": "unknown",
+      "blockers": [],
+      "premortem": [],
+      "decisions": [
+        {
+          "date": "2026-01-14",
+          "phase": null,
+          "decision": "Created analysis document",
+          "rationale": "User reported flow not being followed"
+        },
+        {
+          "date": "2026-01-14",
+          "phase": null,
+          "decision": "User approved implementation",
+          "rationale": "Clear command: \"implementuj opcje E\""
+        },
+        {
+          "date": "2026-01-14",
+          "phase": null,
+          "decision": "Added GATE sections after each phase",
+          "rationale": "Enforces write-to-artifact before proceeding"
+        },
+        {
+          "date": "2026-01-14",
+          "phase": null,
+          "decision": "Added NO CODE enforcement",
+          "rationale": "Claude kept implementing instead of just planning"
+        },
+        {
+          "date": "2026-01-14",
+          "phase": null,
+          "decision": "Synced feature-development skill",
+          "rationale": "Claude was using wrong skill"
+        },
+        {
+          "date": "2026-01-14",
+          "phase": null,
+          "decision": "Status: well-done",
+          "rationale": "Implementation complete, ready for marketplace update"
+        }
+      ],
+      "indexedAt": "2026-01-20T22:12:35.925Z"
+    },
+    {
+      "path": "/Users/patrykjuniszewski/claude-cook/cook/test-artifact-linking.2026-01-13.cook.md",
+      "filename": "test-artifact-linking.2026-01-13.cook.md",
+      "slug": "test-artifact-linking",
+      "date": "2026-01-13",
+      "status": "implementing",
+      "mode": "well-done",
+      "title": "Test feature to verify code-artifact-linking flow works correctly.",
+      "owner": null,
+      "filesTouched": [
+        "test/artifact-linking-test.js",
+        "scripts/lib/testUtils.js"
+      ],
+      "riskLevel": "unknown",
+      "blockers": [],
+      "premortem": [],
+      "decisions": [],
+      "indexedAt": "2026-01-20T22:12:35.926Z"
+    },
+    {
+      "path": "/Users/patrykjuniszewski/claude-cook/cook/artifact-versioning-diff.2026-01-10.cook.md",
+      "filename": "artifact-versioning-diff.2026-01-10.cook.md",
+      "slug": "artifact-versioning-diff",
+      "date": "2026-01-10",
+      "status": "ready-for-merge",
+      "mode": "well-done",
+      "title": "Artifact Versioning & Diff for cook artifacts",
+      "owner": "@developer",
+      "filesTouched": [
+        ".claude/templates/cook_artifact_template.md",
+        ".claude/commands/cook.md",
+        "scripts/lib/artifactParser.js",
+        "test/cook-diff.test.js",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "riskLevel": "low",
+      "blockers": [],
+      "premortem": [],
+      "decisions": [
+        {
+          "date": "2026-01-10",
+          "phase": null,
+          "decision": "Use ## Changelog inside artifact (Option A)",
+          "rationale": "Single file is simpler, no file management overhead, visible in artifact itself"
+        },
+        {
+          "date": "2026-01-10",
+          "phase": null,
+          "decision": "Node.js for CLI implementation",
+          "rationale": "Required for markdown parsing, cross-platform"
+        }
+      ],
+      "indexedAt": "2026-01-20T22:12:35.927Z"
+    },
+    {
+      "path": "/Users/patrykjuniszewski/claude-cook/cook/dry-run-validation.2026-01-10.cook.md",
+      "filename": "dry-run-validation.2026-01-10.cook.md",
+      "slug": "dry-run-validation",
+      "date": "2026-01-10",
+      "status": "well-done",
+      "mode": "well-done",
+      "title": "Dry-Run + Validation layer for /cook command - catches \"AI went too fast\" issues BEFORE implementation",
+      "owner": "@developer",
+      "filesTouched": [
+        ".claude/skills/feature-development/skill.md",
+        ".claude/commands/cook.md",
+        ".claude/templates/validation-checklist.md",
+        "scripts/lib/validator.js",
+        "README.md",
+        "CLAUDE.md"
+      ],
+      "riskLevel": "low",
+      "blockers": [],
+      "premortem": [],
+      "decisions": [
+        {
+          "date": "2026-01-10",
+          "phase": null,
+          "decision": "Separate CLI tool + skill integration",
+          "rationale": "Enables both inline and standalone validation"
+        },
+        {
+          "date": "2026-01-10",
+          "phase": null,
+          "decision": "Mode-specific rules",
+          "rationale": "Well-done and microwave have different requirements"
+        }
+      ],
+      "indexedAt": "2026-01-20T22:12:35.927Z"
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "total": 4,
+    "byStatus": {
+      "well-done": 2,
+      "implementing": 1,
+      "ready-for-merge": 1
+    },
+    "byMode": {
+      "well-done": 4
+    },
+    "byRisk": {
+      "unknown": 2,
+      "low": 2
+    }
+  }
+}
