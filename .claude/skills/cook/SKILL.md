@@ -780,6 +780,53 @@ Status: `raw` -> `cooking`
 
 ---
 
+### Step 1.5 - Recipe Library (Similar Dishes)
+
+After completing Step 1, **check for similar past artifacts** to enable pattern reuse.
+
+#### What to Display
+
+If similar artifacts exist (>20% similarity), show them to the user:
+
+```
+🔍 Similar dishes found in your kitchen:
+┌──────────────────────────────────────────────────────────────┐
+│ 1. user-auth.2026-01-05.cook.md (78% similar)                │
+│    "Add user authentication with OAuth"                       │
+│    Files: src/auth/*, src/session.ts                          │
+│    Key decision: Used JWT with 1h expiry                      │
+├──────────────────────────────────────────────────────────────┤
+│ 2. session-refresh.2026-01-12.cook.md (65% similar)          │
+│    "Implement token refresh flow"                             │
+│    Files: src/session.ts, lib/token.ts                        │
+│    Key decision: Refresh 5min before expiry                   │
+└──────────────────────────────────────────────────────────────┘
+💡 Consider reusing patterns from these artifacts.
+```
+
+#### Similarity Matching
+
+Similarity is calculated from:
+- **Files touched** (50% weight) - Jaccard similarity on file paths
+- **Title keywords** (30% weight) - Common significant words
+- **Feature keywords** (20% weight) - Extracted from description
+
+#### When No Similar Dishes Found
+
+If no artifacts match above 20% similarity, skip this display silently.
+If the `cook/` directory is empty, this step does nothing.
+
+#### Purpose
+
+- **Pattern reuse**: Don't reinvent the wheel
+- **Decision recall**: Remember why past choices were made
+- **Consistency**: Align with similar past features
+- **Speed**: Reference proven approaches
+
+**Note:** This is informational only. Similar dishes are NOT written to the artifact.
+
+---
+
 ### Step 2 - Ingredient Approval (well-done only)
 - Is this in scope for the project? (Is it on our menu?)
 - Does it add user value? (Will customers order it?)

@@ -239,6 +239,75 @@ Checks include:
 
 Use `/cook-menu` for interactive artifact management (validate, compare, view status).
 
+## Recipe Library (Similar Dishes)
+
+When you run `/cook`, similar past artifacts are automatically surfaced:
+
+```
+/cook Add session timeout
+
+🔍 Similar dishes found in your kitchen:
+┌──────────────────────────────────────────────────────────────┐
+│ 1. user-auth.2026-01-05.cook.md (78% similar)                │
+│    "Add user authentication with OAuth"                       │
+│    Files: src/auth/*, src/session.ts                          │
+│    Key decision: Used JWT with 1h expiry                      │
+├──────────────────────────────────────────────────────────────┤
+│ 2. session-refresh.2026-01-12.cook.md (65% similar)          │
+│    "Implement token refresh flow"                             │
+│    Files: src/session.ts, lib/token.ts                        │
+│    Key decision: Refresh 5min before expiry                   │
+└──────────────────────────────────────────────────────────────┘
+💡 Consider reusing patterns from these artifacts.
+```
+
+This helps you:
+- **Reuse patterns** from similar past features
+- **Recall decisions** and why they were made
+- **Stay consistent** with related work
+
+Similarity is calculated from files touched (50%), title keywords (30%), and feature keywords (20%).
+
+## Analytics
+
+Track cooking metrics with `/cook-stats`:
+
+```bash
+# Show overall statistics
+./scripts/cook-stats
+
+# Filter by date
+./scripts/cook-stats --since 2026-01-01
+
+# Search artifacts
+./scripts/cook-stats search "authentication"
+
+# Find similar by files
+./scripts/cook-stats similar src/auth.ts
+
+# Show timeline
+./scripts/cook-stats timeline
+```
+
+Output:
+```
+📊 Cook Analytics (all time)
+────────────────────────────────────────
+Total cooks: 12
+  • 8 well-done, 4 microwave
+
+Status breakdown:
+  ✅ well-done: 6
+  🚀 ready-for-merge: 2
+  🔥 cooking: 1
+
+Completion rate: 67%
+
+Hot files:
+  • src/auth/* (5 cooks)
+  • api/routes.ts (4 cooks)
+```
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).
