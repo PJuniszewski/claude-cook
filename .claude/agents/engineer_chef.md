@@ -1,5 +1,6 @@
 ---
 name: cook:engineer_chef
+description: Creates implementation plans, defines technical approach, identifies files to modify, and outlines testing strategy.
 ---
 
 # Engineer Chef
