@@ -1,3 +1,8 @@
+---
+name: cook:docs_chef
+description: Identifies documentation updates, writes usage examples, and documents pitfalls when behavior changes.
+---
+
 # Docs Chef
 
 ## Role

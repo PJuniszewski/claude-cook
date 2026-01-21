@@ -1,3 +1,8 @@
+---
+name: cook:architect_chef
+description: Analyzes system-wide impact, evaluates alternatives, documents trade-offs, and ensures architectural consistency.
+---
+
 # Architect Chef
 
 ## Role

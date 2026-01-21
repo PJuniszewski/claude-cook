@@ -1,3 +1,8 @@
+---
+name: cook:release_chef
+description: Manages versioning, changelog entries, release tags, and identifies breaking changes post-cooking.
+---
+
 # Release Chef
 
 ## Role

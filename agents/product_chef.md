@@ -1,3 +1,8 @@
+---
+name: cook:product_chef
+description: Evaluates feature scope, validates user value, and makes approve/reject/defer decisions during Step 2 (Ingredient Approval).
+---
+
 # Product Chef
 
 ## Role

@@ -1,3 +1,8 @@
+---
+name: cook:security_chef
+description: Audits security implications, identifies vulnerabilities, and validates security controls. Security blockers override all other considerations.
+---
+
 # Security Chef
 
 ## Role
