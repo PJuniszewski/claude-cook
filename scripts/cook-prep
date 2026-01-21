@@ -1,0 +1,110 @@
+#!/usr/bin/env node
+
+/**
+ * cook-prep CLI
+ *
+ * Generate file stubs and test skeletons from cook artifact.
+ *
+ * Usage:
+ *   cook-prep <artifact>
+ *   cook-prep <artifact> --dry-run
+ *   cook-prep <artifact> --force
+ */
+
+const path = require('path');
+const fs = require('fs');
+const { createFileStubs, formatPrepReport, loadArtifactFiles } = require('./lib/stubGenerator');
+
+function showHelp() {
+  console.log(`
+cook-prep - Generate file stubs from cook artifact
+
+USAGE:
+  cook-prep <artifact> [options]
+
+ARGUMENTS:
+  <artifact>    Path to cook artifact (e.g., cook/feature.cook.md)
+
+OPTIONS:
+  --dry-run     Show what would be created without creating
+  --force       Overwrite existing files
+  --list        List files that would be created
+  --help        Show this help
+
+EXAMPLES:
+  cook-prep cook/feature.2026-01-21.cook.md
+  cook-prep cook/feature.cook.md --dry-run
+  cook-prep feature --force
+`);
+}
+
+function main() {
+  const args = process.argv.slice(2);
+
+  // Parse args
+  const options = {
+    dryRun: args.includes('--dry-run'),
+    force: args.includes('--force'),
+    list: args.includes('--list'),
+    help: args.includes('--help')
+  };
+
+  const positional = args.filter(a => !a.startsWith('--'));
+
+  if (options.help || positional.length === 0) {
+    showHelp();
+    process.exit(0);
+  }
+
+  // Resolve artifact path
+  let artifactPath = positional[0];
+
+  if (!fs.existsSync(artifactPath)) {
+    // Try cook/ directory
+    artifactPath = path.join('cook', artifactPath);
+  }
+  if (!fs.existsSync(artifactPath)) {
+    // Try with .cook.md extension
+    artifactPath = positional[0];
+    if (!artifactPath.endsWith('.cook.md')) {
+      const today = new Date().toISOString().split('T')[0];
+      artifactPath = path.join('cook', `${positional[0]}.${today}.cook.md`);
+    }
+  }
+  if (!fs.existsSync(artifactPath)) {
+    console.error(`Error: Artifact not found: ${positional[0]}`);
+    console.error('Try: cook-prep cook/your-artifact.cook.md');
+    process.exit(1);
+  }
+
+  try {
+    if (options.list) {
+      // Just list files
+      const { files } = loadArtifactFiles(artifactPath);
+      console.log('\nFiles defined in artifact:');
+      for (const f of files) {
+        const exists = fs.existsSync(f.path) ? ' (exists)' : '';
+        console.log(`  ${f.path}${exists}`);
+      }
+      console.log('');
+      return;
+    }
+
+    // Create stubs
+    const result = createFileStubs(artifactPath, options);
+    console.log(formatPrepReport(result));
+
+    if (!options.dryRun && result.created.length > 0) {
+      console.log('Next steps:');
+      console.log('  1. Review generated stubs');
+      console.log('  2. Implement the TODO sections');
+      console.log('  3. Run tests');
+      console.log('');
+    }
+  } catch (err) {
+    console.error(`Error: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+main();
