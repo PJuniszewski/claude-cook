@@ -784,6 +784,29 @@ Status: `raw` -> `cooking`
 
 After completing Step 1, **check for similar past artifacts** to enable pattern reuse.
 
+#### How to Execute
+
+Run the similarity search using the feature description:
+
+```bash
+node -e "
+const { findSimilarArtifacts } = require('./scripts/lib/similarity');
+const results = findSimilarArtifacts({
+  description: '<FEATURE_DESCRIPTION>',
+  files: [],  // Will be populated from Step 1 affected files if known
+  limit: 3,
+  minSimilarity: 20
+});
+console.log(JSON.stringify(results, null, 2));
+"
+```
+
+Or use the search command for keyword-based lookup:
+
+```bash
+./scripts/cook-stats search "<keyword from feature>"
+```
+
 #### What to Display
 
 If similar artifacts exist (>20% similarity), show them to the user:
@@ -823,7 +846,19 @@ If the `cook/` directory is empty, this step does nothing.
 - **Consistency**: Align with similar past features
 - **Speed**: Reference proven approaches
 
-**Note:** This is informational only. Similar dishes are NOT written to the artifact.
+#### What to Do with Results
+
+If similar artifacts are found:
+
+1. **Display them to the user** (using the format above)
+2. **Read the most similar artifact** to extract:
+   - Key decisions made
+   - Pre-mortem scenarios (for reuse)
+   - Trade-offs documented
+3. **Ask the user**: "Found similar past work. Want to reuse patterns from `<artifact>`?"
+4. **If yes**: Pre-fill relevant sections in later steps
+
+**Note:** Similar dishes are informational - they are NOT written to the artifact, but they inform the cooking process.
 
 ---
 
