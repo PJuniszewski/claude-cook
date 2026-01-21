@@ -183,14 +183,11 @@ The more explicit your project documentation, the more accurate `/cook` will be 
 
 ## Diff & Versioning
 
-Compare two cook artifacts to see what changed:
+Use `/cook-menu` to compare artifacts interactively, or ask Claude directly:
 
-```bash
-# Compare two artifacts
-./scripts/cook-diff cook/feature-a.cook.md cook/feature-b.cook.md
-
-# Show changelog entries since a date
-./scripts/cook-diff cook/feature.cook.md --since 2026-01-01
+```
+"Compare cook/feature-a.cook.md with cook/feature-b.cook.md"
+"What changed in the auth artifact since last week?"
 ```
 
 Output shows:
@@ -219,15 +216,14 @@ Shows:
 
 Validate cook artifacts against mode-specific requirements:
 
-```bash
-# Validate an artifact
-./scripts/cook-validate cook/feature.cook.md
+```
+/cook-menu
+# Then select "Validate" from the menu
+```
 
-# Verbose output (show all checks)
-./scripts/cook-validate cook/feature.cook.md --verbose
-
-# JSON output (for CI)
-./scripts/cook-validate cook/feature.cook.md --json
+Or ask Claude directly:
+```
+"Validate cook/feature.cook.md"
 ```
 
 Checks include:
@@ -272,21 +268,12 @@ Similarity is calculated from files touched (50%), title keywords (30%), and fea
 
 Track cooking metrics with `/cook-stats`:
 
-```bash
-# Show overall statistics
-./scripts/cook-stats
-
-# Filter by date
-./scripts/cook-stats --since 2026-01-01
-
-# Search artifacts
-./scripts/cook-stats search "authentication"
-
-# Find similar by files
-./scripts/cook-stats similar src/auth.ts
-
-# Show timeline
-./scripts/cook-stats timeline
+```
+/cook-stats                           # Show overall statistics
+/cook-stats --since 2026-01-01        # Filter by date
+/cook-stats search "authentication"   # Search artifacts
+/cook-stats similar src/auth.ts       # Find similar by files
+/cook-stats timeline                  # Show timeline
 ```
 
 Output:
@@ -312,27 +299,12 @@ Hot files:
 
 Sous Chef watches over your kitchen to ensure cooking discipline is maintained:
 
-```bash
-# Detect commits with uncooked sensitive changes
-./scripts/sous-chef monitor
-
-# Check specific commit range
-./scripts/sous-chef monitor --since HEAD~20
-
-# Compare implementation against artifact plan
-./scripts/sous-chef drift cook/feature.cook.md
-
-# Check drift against specific git range
-./scripts/sous-chef drift cook/feature.cook.md --range main..feature-branch
-
-# Analyze pre-mortem predictions vs outcomes
-./scripts/sous-chef postmortem cook/feature.cook.md
-
-# Analyze with known incidents
-./scripts/sous-chef postmortem cook/feature.cook.md --incidents "timeout,memory leak"
-
-# Get suggestions for frequently-changed files
-./scripts/sous-chef suggest
+```
+/sous-chef monitor                    # Detect uncooked sensitive changes
+/sous-chef monitor --since HEAD~20    # Check specific commit range
+/sous-chef drift cook/feature.cook.md # Compare plan vs implementation
+/sous-chef postmortem cook/feature.cook.md  # Analyze predictions vs outcomes
+/sous-chef suggest                    # Get governance suggestions
 ```
 
 ### Change Monitor Output
@@ -380,65 +352,26 @@ Sous Chef helps you:
 
 ## Implementation Bridge
 
-Connect planning to execution with prep, pr, and link commands:
+Connect planning to execution - ask Claude:
 
-```bash
-# Generate file stubs from artifact plan
-./scripts/cook-prep cook/feature.cook.md
-./scripts/cook-prep feature --dry-run  # Preview only
-./scripts/cook-prep feature --list     # List files
-
-# Generate PR description from artifact
-./scripts/cook-pr cook/feature.cook.md
-./scripts/cook-pr feature --body-only  # Just the body (for gh pr create)
-./scripts/cook-pr feature --json       # JSON output
-
-# Link artifact to merged PR
-./scripts/cook-link cook/feature.cook.md 123
-./scripts/cook-link feature #456
+```
+"Generate file stubs from cook/feature.cook.md"
+"Create PR description from the auth artifact"
+"Link cook/feature.cook.md to PR #123"
 ```
 
-### PR Generation Output
-```
-======================================
-  COOK-PR - PR Description Generator
-======================================
-
-Title:
-  Add user authentication with OAuth
-
-Body:
-----------------------------------------
-## Summary
-- Add OAuth login flow
-- Implement session management
-- Add logout endpoint
-
-## Test plan
-- [ ] OAuth flow works end-to-end
-- [ ] Session persists across page loads
-- [ ] Logout clears session
-
-## Risk
-- Risk level: **medium**
-- Security reviewed: Yes
-
----
-Cook artifact: `user-auth.2026-01-20`
-```
+Or use `/cook-menu` for interactive options.
 
 ## MCP Dashboard
 
-The cook plugin includes an MCP server for Claude integration:
+The cook plugin includes an MCP server for Claude integration (auto-configured when plugin is enabled):
 
 ```json
-// .mcp.json (auto-configured)
+// .mcp.json (auto-configured by plugin)
 {
-  "mcpServers": {
-    "cook-dashboard": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/mcp-server.js"]
-    }
+  "cook-dashboard": {
+    "command": "node",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/mcp-server.js"]
   }
 }
 ```
