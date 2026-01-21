@@ -1,9 +1,6 @@
 {
-  "mcpServers": {
-    "cook-dashboard": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/mcp-server.js"],
-      "description": "Cook artifact dashboard - provides visibility into cooking activity"
-    }
+  "cook-dashboard": {
+    "command": "node",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/mcp-server.js"]
   }
 }
