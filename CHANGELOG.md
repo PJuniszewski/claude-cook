@@ -4,6 +4,13 @@ All notable changes to claude-cook will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.5.3] - 2026-01-21
+
+### Fixed
+- **Plugin structure**: Moved `commands/`, `skills/`, `agents/` to root level (was `.claude/*`)
+  - All commands now properly exposed: `/cook:cook`, `/cook:cook-menu`, `/cook:cook-stats`, `/cook:sous-chef`
+  - Previously only `/cook:cook` was visible from plugin
+
 ## [1.5.2] - 2026-01-21
 
 ### Fixed

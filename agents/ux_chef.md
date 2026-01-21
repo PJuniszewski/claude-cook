@@ -1,3 +1,8 @@
+---
+name: cook:ux_chef
+description: Reviews user experience implications, validates interaction patterns, and ensures UI changes don't confuse users.
+---
+
 # UX Chef
 
 ## Role
