@@ -1,5 +1,5 @@
 {
-  "description": "Cook plugin - Artifact-first enforcement",
+  "description": "Cook plugin - Artifact-first enforcement and auto-population",
   "hooks": {
     "PreToolUse": [
       {
@@ -12,6 +12,19 @@
           {
             "type": "prompt",
             "prompt": "COOK ARTIFACT CHECK: Before proceeding with this tool, check if a cook artifact exists.\n\n1. Look for files matching: cook/*.cook.md in current working directory\n2. If this is /cook mode and NO artifact exists:\n   - BLOCK this action\n   - Say: 'BLOCKED: Create artifact first with Write tool'\n3. If artifact EXISTS or this is NOT /cook mode:\n   - ALLOW the action\n\nOnly block if explicitly in /cook flow AND no artifact file exists yet."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": {
+          "toolName": "Write"
+        },
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/.claude/hooks/cook-owner.sh"
           }
         ]
       }
