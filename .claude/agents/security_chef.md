@@ -1,3 +1,7 @@
+---
+name: cook:security_chef
+---
+
 # Security Chef
 
 ## Role

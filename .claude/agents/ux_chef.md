@@ -1,3 +1,7 @@
+---
+name: cook:ux_chef
+---
+
 # UX Chef
 
 ## Role

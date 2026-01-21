@@ -1,3 +1,7 @@
+---
+name: cook:docs_chef
+---
+
 # Docs Chef
 
 ## Role

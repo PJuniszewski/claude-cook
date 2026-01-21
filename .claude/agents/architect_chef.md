@@ -1,3 +1,7 @@
+---
+name: cook:architect_chef
+---
+
 # Architect Chef
 
 ## Role

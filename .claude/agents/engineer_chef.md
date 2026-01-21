@@ -1,3 +1,7 @@
+---
+name: cook:engineer_chef
+---
+
 # Engineer Chef
 
 ## Role

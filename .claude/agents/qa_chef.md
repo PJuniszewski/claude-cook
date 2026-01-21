@@ -1,3 +1,7 @@
+---
+name: cook:qa_chef
+---
+
 # QA Chef
 
 ## Role

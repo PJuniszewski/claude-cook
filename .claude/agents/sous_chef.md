@@ -1,3 +1,7 @@
+---
+name: cook:sous_chef
+---
+
 # Sous Chef Agent
 
 ## Role
