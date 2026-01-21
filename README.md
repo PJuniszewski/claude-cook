@@ -378,6 +378,93 @@ Sous Chef helps you:
 - **Learn from past predictions** to improve future risk assessments
 - **Identify hot files** that need more governance
 
+## Implementation Bridge
+
+Connect planning to execution with prep, pr, and link commands:
+
+```bash
+# Generate file stubs from artifact plan
+./scripts/cook-prep cook/feature.cook.md
+./scripts/cook-prep feature --dry-run  # Preview only
+./scripts/cook-prep feature --list     # List files
+
+# Generate PR description from artifact
+./scripts/cook-pr cook/feature.cook.md
+./scripts/cook-pr feature --body-only  # Just the body (for gh pr create)
+./scripts/cook-pr feature --json       # JSON output
+
+# Link artifact to merged PR
+./scripts/cook-link cook/feature.cook.md 123
+./scripts/cook-link feature #456
+```
+
+### PR Generation Output
+```
+======================================
+  COOK-PR - PR Description Generator
+======================================
+
+Title:
+  Add user authentication with OAuth
+
+Body:
+----------------------------------------
+## Summary
+- Add OAuth login flow
+- Implement session management
+- Add logout endpoint
+
+## Test plan
+- [ ] OAuth flow works end-to-end
+- [ ] Session persists across page loads
+- [ ] Logout clears session
+
+## Risk
+- Risk level: **medium**
+- Security reviewed: Yes
+
+---
+Cook artifact: `user-auth.2026-01-20`
+```
+
+## MCP Dashboard
+
+The cook plugin includes an MCP server for Claude integration:
+
+```json
+// .mcp.json (auto-configured)
+{
+  "mcpServers": {
+    "cook-dashboard": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/mcp-server.js"]
+    }
+  }
+}
+```
+
+### Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `cook_list` | List all artifacts with optional status filter |
+| `cook_status` | Get detailed status of specific artifact |
+| `cook_blockers` | List blocked artifacts with reasons |
+| `cook_search` | Search artifacts by keyword |
+
+### Example Usage in Claude
+
+```
+"What features are currently cooking?"
+-> Claude uses cook_list tool
+
+"Show me blocked artifacts"
+-> Claude uses cook_blockers tool
+
+"Find artifacts related to authentication"
+-> Claude uses cook_search with query "authentication"
+```
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).
