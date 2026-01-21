@@ -1,5 +1,6 @@
 ---
 name: cook:sous_chef
+description: Background monitoring assistant that watches over the codebase to ensure cooking discipline is maintained.
 ---
 
 # Sous Chef Agent

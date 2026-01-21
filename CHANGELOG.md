@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Added required `name` field frontmatter to all chef agent files
+- Added required `description` field frontmatter to all chef agent files
 - Renamed `README.md` to `README.txt` in agents folder to prevent parsing errors
 - Fixed `.mcp.json` format (removed `mcpServers` wrapper to match plugin spec)
 
