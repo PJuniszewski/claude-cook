@@ -1,8 +1,75 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-01-20T22:30:28.002Z",
+  "generatedAt": "2026-01-21T06:56:24.026Z",
   "cookDir": "/Users/patrykjuniszewski/claude-cook/cook",
   "artifacts": [
+    {
+      "path": "/Users/patrykjuniszewski/claude-cook/cook/implementation-bridge.2026-01-21.cook.md",
+      "filename": "implementation-bridge.2026-01-21.cook.md",
+      "slug": "implementation-bridge",
+      "date": "2026-01-21",
+      "status": "well-done",
+      "mode": "well-done",
+      "title": "Implementation Bridge - Connect planning to execution with prep, pr, and link commands",
+      "owner": "@developer",
+      "filesTouched": [
+        "scripts/lib/stubGenerator.js",
+        "scripts/lib/prGenerator.js",
+        "*stubGenerator.js",
+        "*prGenerator.js"
+      ],
+      "riskLevel": "unknown",
+      "blockers": [],
+      "premortem": [
+        {
+          "risk": "File stubs overwrite existing code",
+          "mitigation": "check exists, skip with warning"
+        },
+        {
+          "risk": "PR format doesn't match team style",
+          "mitigation": "customizable template"
+        },
+        {
+          "risk": "Artifact missing required sections",
+          "mitigation": "graceful defaults"
+        }
+      ],
+      "decisions": [],
+      "indexedAt": "2026-01-21T06:56:24.024Z"
+    },
+    {
+      "path": "/Users/patrykjuniszewski/claude-cook/cook/mcp-dashboard.2026-01-21.cook.md",
+      "filename": "mcp-dashboard.2026-01-21.cook.md",
+      "slug": "mcp-dashboard",
+      "date": "2026-01-21",
+      "status": "well-done",
+      "mode": "well-done",
+      "title": "MCP Dashboard - Live visibility into cook artifacts via Model Context Protocol server",
+      "owner": "@developer",
+      "filesTouched": [
+        "scripts/mcp-server.js",
+        "scripts/lib/mcpHandlers.js",
+        ".mcp.json"
+      ],
+      "riskLevel": "unknown",
+      "blockers": [],
+      "premortem": [
+        {
+          "risk": "MCP protocol changes",
+          "mitigation": "pin to stable spec"
+        },
+        {
+          "risk": "Server crashes on malformed input",
+          "mitigation": "defensive parsing"
+        },
+        {
+          "risk": "Index stale during long session",
+          "mitigation": "refresh on each call"
+        }
+      ],
+      "decisions": [],
+      "indexedAt": "2026-01-21T06:56:24.024Z"
+    },
     {
       "path": "/Users/patrykjuniszewski/claude-cook/cook/recipe-library.2026-01-20.cook.md",
       "filename": "recipe-library.2026-01-20.cook.md",
@@ -25,7 +92,45 @@
       "blockers": [],
       "premortem": [],
       "decisions": [],
-      "indexedAt": "2026-01-20T22:30:28.001Z"
+      "indexedAt": "2026-01-21T06:56:24.025Z"
+    },
+    {
+      "path": "/Users/patrykjuniszewski/claude-cook/cook/sous-chef.2026-01-20.cook.md",
+      "filename": "sous-chef.2026-01-20.cook.md",
+      "slug": "sous-chef",
+      "date": "2026-01-20",
+      "status": "well-done",
+      "mode": "well-done",
+      "title": "Sous Chef - Background monitoring agent that watches for uncooked changes, detects drift between plan and implementation, and surfaces proactive suggestions",
+      "owner": "@developer",
+      "filesTouched": [
+        "scripts/lib/changeMonitor.js",
+        "scripts/lib/driftDetector.js",
+        "scripts/lib/postMortem.js",
+        ".claude/agents/sous_chef.md",
+        ".claude/skills/cook/sous-chef.md",
+        "*changeMonitor.js",
+        "*driftDetector.js",
+        "*postMortem.js"
+      ],
+      "riskLevel": "unknown",
+      "blockers": [],
+      "premortem": [
+        {
+          "risk": "Git command fails on Windows",
+          "mitigation": "Use path.normalize(), test on Windows, document requirements"
+        },
+        {
+          "risk": "Artifact parsing breaks on edge cases",
+          "mitigation": "Reuse existing artifactParser.js, add defensive parsing"
+        },
+        {
+          "risk": "False positives flood user",
+          "mitigation": "Configurable sensitivity, sensible defaults, clear explanations"
+        }
+      ],
+      "decisions": [],
+      "indexedAt": "2026-01-21T06:56:24.025Z"
     },
     {
       "path": "/Users/patrykjuniszewski/claude-cook/cook/cook-flow-enforcement.2026-01-14.cook.md",
@@ -78,7 +183,7 @@
           "rationale": "Implementation complete, ready for marketplace update"
         }
       ],
-      "indexedAt": "2026-01-20T22:30:28.002Z"
+      "indexedAt": "2026-01-21T06:56:24.025Z"
     },
     {
       "path": "/Users/patrykjuniszewski/claude-cook/cook/test-artifact-linking.2026-01-13.cook.md",
@@ -97,7 +202,7 @@
       "blockers": [],
       "premortem": [],
       "decisions": [],
-      "indexedAt": "2026-01-20T22:30:28.002Z"
+      "indexedAt": "2026-01-21T06:56:24.025Z"
     },
     {
       "path": "/Users/patrykjuniszewski/claude-cook/cook/artifact-versioning-diff.2026-01-10.cook.md",
@@ -133,7 +238,7 @@
           "rationale": "Required for markdown parsing, cross-platform"
         }
       ],
-      "indexedAt": "2026-01-20T22:30:28.002Z"
+      "indexedAt": "2026-01-21T06:56:24.026Z"
     },
     {
       "path": "/Users/patrykjuniszewski/claude-cook/cook/dry-run-validation.2026-01-10.cook.md",
@@ -169,23 +274,23 @@
           "rationale": "Well-done and microwave have different requirements"
         }
       ],
-      "indexedAt": "2026-01-20T22:30:28.002Z"
+      "indexedAt": "2026-01-21T06:56:24.026Z"
     }
   ],
   "errors": [],
   "stats": {
-    "total": 5,
+    "total": 8,
     "byStatus": {
-      "well-done": 3,
+      "well-done": 6,
       "implementing": 1,
       "ready-for-merge": 1
     },
     "byMode": {
-      "well-done": 5
+      "well-done": 8
     },
     "byRisk": {
-      "low": 3,
-      "unknown": 2
+      "unknown": 5,
+      "low": 3
     }
   }
 }
