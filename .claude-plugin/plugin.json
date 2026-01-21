@@ -1,6 +1,6 @@
 {
   "name": "cook",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Feature development with guardrails. Plan → Review → Code → Ship.",
   "author": {
     "name": "Patryk Juniszewski",
