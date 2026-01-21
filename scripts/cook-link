@@ -1,0 +1,116 @@
+#!/usr/bin/env node
+
+/**
+ * cook-link CLI
+ *
+ * Link a cook artifact to a PR for tracking.
+ *
+ * Usage:
+ *   cook-link <artifact> <pr-ref>
+ */
+
+const path = require('path');
+const fs = require('fs');
+const { linkArtifactToPR } = require('./lib/prGenerator');
+
+function showHelp() {
+  console.log(`
+cook-link - Link cook artifact to a PR
+
+USAGE:
+  cook-link <artifact> <pr-ref>
+
+ARGUMENTS:
+  <artifact>    Path to cook artifact (e.g., cook/feature.cook.md)
+  <pr-ref>      PR reference (number, URL, or branch)
+
+OPTIONS:
+  --help        Show this help
+
+EXAMPLES:
+  cook-link cook/feature.2026-01-21.cook.md #123
+  cook-link feature 123
+  cook-link feature https://github.com/owner/repo/pull/123
+
+WHAT IT DOES:
+  1. Adds PR reference to artifact header
+  2. Updates Decision Log with link entry
+  3. Updates status to ready-for-merge (if well-done)
+  4. Adds changelog entry
+`);
+}
+
+function main() {
+  const args = process.argv.slice(2);
+
+  if (args.includes('--help') || args.length < 2) {
+    showHelp();
+    process.exit(args.includes('--help') ? 0 : 1);
+  }
+
+  const positional = args.filter(a => !a.startsWith('--'));
+
+  if (positional.length < 2) {
+    console.error('Error: Both artifact and PR reference required');
+    showHelp();
+    process.exit(1);
+  }
+
+  // Resolve artifact path
+  let artifactPath = positional[0];
+
+  if (!fs.existsSync(artifactPath)) {
+    artifactPath = path.join('cook', artifactPath);
+  }
+  if (!fs.existsSync(artifactPath)) {
+    // Try glob in cook/
+    const cookDir = 'cook';
+    if (fs.existsSync(cookDir)) {
+      const files = fs.readdirSync(cookDir).filter(f =>
+        f.includes(positional[0]) && f.endsWith('.cook.md')
+      );
+      if (files.length === 1) {
+        artifactPath = path.join(cookDir, files[0]);
+      }
+    }
+  }
+
+  if (!fs.existsSync(artifactPath)) {
+    console.error(`Error: Artifact not found: ${positional[0]}`);
+    process.exit(1);
+  }
+
+  // Parse PR reference
+  let prRef = positional[1];
+
+  // Normalize PR reference
+  if (/^\d+$/.test(prRef)) {
+    prRef = `#${prRef}`;
+  } else if (!prRef.startsWith('#') && !prRef.startsWith('http')) {
+    prRef = `#${prRef}`;
+  }
+
+  try {
+    linkArtifactToPR(artifactPath, prRef);
+
+    console.log('');
+    console.log('======================================');
+    console.log('  COOK-LINK - Artifact Linked');
+    console.log('======================================');
+    console.log('');
+    console.log(`Artifact: ${path.basename(artifactPath)}`);
+    console.log(`PR:       ${prRef}`);
+    console.log('');
+    console.log('Updated:');
+    console.log('  - Added PR Reference section');
+    console.log('  - Added Decision Log entry');
+    console.log('  - Updated status to ready-for-merge');
+    console.log('  - Added changelog entry');
+    console.log('');
+  } catch (err) {
+    console.error(`Error: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+main();

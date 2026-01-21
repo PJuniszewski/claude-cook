@@ -1,0 +1,113 @@
+#!/usr/bin/env node
+
+/**
+ * cook-pr CLI
+ *
+ * Generate GitHub PR description from cook artifact.
+ *
+ * Usage:
+ *   cook-pr <artifact>
+ *   cook-pr <artifact> --title-only
+ *   cook-pr <artifact> --body-only
+ */
+
+const path = require('path');
+const fs = require('fs');
+const { generatePRDescription, formatPROutput } = require('./lib/prGenerator');
+
+function showHelp() {
+  console.log(`
+cook-pr - Generate PR description from cook artifact
+
+USAGE:
+  cook-pr <artifact> [options]
+
+ARGUMENTS:
+  <artifact>    Path to cook artifact (e.g., cook/feature.cook.md)
+
+OPTIONS:
+  --title-only  Output only the PR title
+  --body-only   Output only the PR body (for piping to gh)
+  --json        Output as JSON
+  --help        Show this help
+
+EXAMPLES:
+  cook-pr cook/feature.2026-01-21.cook.md
+  cook-pr feature --body-only | gh pr create --title "Title" --body-file -
+  cook-pr feature --json
+`);
+}
+
+function main() {
+  const args = process.argv.slice(2);
+
+  // Parse args
+  const options = {
+    titleOnly: args.includes('--title-only'),
+    bodyOnly: args.includes('--body-only'),
+    json: args.includes('--json'),
+    help: args.includes('--help')
+  };
+
+  const positional = args.filter(a => !a.startsWith('--'));
+
+  if (options.help || positional.length === 0) {
+    showHelp();
+    process.exit(0);
+  }
+
+  // Resolve artifact path
+  let artifactPath = positional[0];
+
+  if (!fs.existsSync(artifactPath)) {
+    artifactPath = path.join('cook', artifactPath);
+  }
+  if (!fs.existsSync(artifactPath)) {
+    // Try glob in cook/
+    const cookDir = 'cook';
+    if (fs.existsSync(cookDir)) {
+      const files = fs.readdirSync(cookDir).filter(f =>
+        f.includes(positional[0]) && f.endsWith('.cook.md')
+      );
+      if (files.length === 1) {
+        artifactPath = path.join(cookDir, files[0]);
+      } else if (files.length > 1) {
+        console.error(`Multiple artifacts match "${positional[0]}":`);
+        files.forEach(f => console.error(`  - ${f}`));
+        process.exit(1);
+      }
+    }
+  }
+
+  if (!fs.existsSync(artifactPath)) {
+    console.error(`Error: Artifact not found: ${positional[0]}`);
+    process.exit(1);
+  }
+
+  try {
+    const pr = generatePRDescription(artifactPath);
+
+    if (options.titleOnly) {
+      console.log(pr.title);
+      return;
+    }
+
+    if (options.bodyOnly) {
+      console.log(pr.body);
+      return;
+    }
+
+    if (options.json) {
+      console.log(JSON.stringify(pr, null, 2));
+      return;
+    }
+
+    // Full output
+    console.log(formatPROutput(pr));
+  } catch (err) {
+    console.error(`Error: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+main();
