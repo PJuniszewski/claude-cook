@@ -4,7 +4,7 @@ All notable changes to claude-cook will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.5.1] - 2026-01-21
+## [1.5.2] - 2026-01-21
 
 ### Fixed
 - Added required `name` field frontmatter to all chef agent files
