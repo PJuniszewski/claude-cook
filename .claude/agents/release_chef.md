@@ -1,3 +1,7 @@
+---
+name: cook:release_chef
+---
+
 # Release Chef
 
 ## Role

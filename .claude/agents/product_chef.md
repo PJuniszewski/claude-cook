@@ -1,3 +1,7 @@
+---
+name: cook:product_chef
+---
+
 # Product Chef
 
 ## Role
