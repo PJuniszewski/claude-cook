@@ -308,6 +308,76 @@ Hot files:
   • api/routes.ts (4 cooks)
 ```
 
+## Sous Chef (Background Monitoring)
+
+Sous Chef watches over your kitchen to ensure cooking discipline is maintained:
+
+```bash
+# Detect commits with uncooked sensitive changes
+./scripts/sous-chef monitor
+
+# Check specific commit range
+./scripts/sous-chef monitor --since HEAD~20
+
+# Compare implementation against artifact plan
+./scripts/sous-chef drift cook/feature.cook.md
+
+# Check drift against specific git range
+./scripts/sous-chef drift cook/feature.cook.md --range main..feature-branch
+
+# Analyze pre-mortem predictions vs outcomes
+./scripts/sous-chef postmortem cook/feature.cook.md
+
+# Analyze with known incidents
+./scripts/sous-chef postmortem cook/feature.cook.md --incidents "timeout,memory leak"
+
+# Get suggestions for frequently-changed files
+./scripts/sous-chef suggest
+```
+
+### Change Monitor Output
+```
+======================================
+  SOUS CHEF - Change Monitor Report
+======================================
+
+Found 2 commit(s) with uncooked sensitive changes:
+
+  abc1234 - Add login endpoint
+    Date: 2026-01-20 10:30:00
+    Sensitive files:
+      - src/auth/login.ts
+      - api/auth/routes.ts
+
+--------------------------------------
+Recommendation: Run /cook for these changes
+```
+
+### Drift Detection Output
+```
+======================================
+  SOUS CHEF - Drift Detection Report
+======================================
+
+Artifact: feature-auth
+Status:   well-done
+
+DRIFT DETECTED
+
+Unplanned changes (scope creep): 2
+  + src/utils/helper.ts
+  + tests/extra.test.ts
+
+Missing from implementation: 1
+  - src/auth/oauth.ts
+```
+
+Sous Chef helps you:
+- **Catch uncooked changes** before they cause problems
+- **Detect scope creep** in implementations
+- **Learn from past predictions** to improve future risk assessments
+- **Identify hot files** that need more governance
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).
