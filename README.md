@@ -16,6 +16,17 @@ claude /plugin install juni-tools:cook
 claude /plugin enable cook
 ```
 
+### Via skills.sh
+
+```bash
+npx skills add PJuniszewski/claude-cook
+```
+
+Or install specific skill:
+```bash
+npx skills add PJuniszewski/claude-cook --skill cook-menu
+```
+
 ### Verify Installation
 
 ```bash

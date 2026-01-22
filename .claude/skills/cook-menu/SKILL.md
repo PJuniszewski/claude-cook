@@ -1,5 +1,6 @@
 ---
-description: Interactive menu for managing cook artifacts
+name: cook-menu
+description: "Interactive menu for managing cook artifacts"
 user-invocable: true
 ---
 
