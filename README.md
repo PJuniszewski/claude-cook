@@ -9,10 +9,10 @@ A Claude Code custom command that enforces a disciplined, multi-phase developmen
 ### Via Juni-Tools Marketplace
 
 ```bash
-# Add the marketplace (run /plugin, select "Add Marketplace", enter: PJuniszewski/juni-tools-marketplace)
+# Add the marketplace (run /plugin, select "Add Marketplace", enter: PJuniszewski/juni-skills-marketplace)
 
 # Install and enable
-claude /plugin install juni-tools:cook
+claude /plugin install juni-skills:cook
 claude /plugin enable cook
 ```
 
