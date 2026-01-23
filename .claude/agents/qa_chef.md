@@ -1,5 +1,5 @@
 ---
-name: cook:qa_chef
+name: juni:qa_chef
 description: Defines test strategy, identifies edge cases, and validates quality criteria during Step 5 (Taste Testing).
 ---
 

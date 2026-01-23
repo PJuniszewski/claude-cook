@@ -1,16 +1,16 @@
 {
-  "name": "claude-cook",
-  "description": "Structured multi-phase development workflow plugin for Claude Code",
+  "name": "juni-skills",
+  "description": "Juni Skills Suite - Feature development workflows and context safety tools",
   "owner": {
     "name": "Patryk Juniszewski",
     "email": "p.juniszewski@gmail.com"
   },
   "plugins": [
     {
-      "name": "cook",
+      "name": "juni",
       "source": "./",
-      "description": "Feature development with guardrails. Plan → Review → Code → Ship.",
-      "version": "1.5.6",
+      "description": "Juni Skills Suite - /juni:cook, /juni:guard, and more.",
+      "version": "2.0.0",
       "category": "development",
       "author": {
         "name": "Patryk Juniszewski"
@@ -20,7 +20,10 @@
         "development",
         "planning",
         "review",
-        "governance"
+        "governance",
+        "context-guard",
+        "tokens",
+        "safety"
       ]
     }
   ]

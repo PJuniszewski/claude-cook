@@ -1,5 +1,5 @@
 ---
-name: cook:release_chef
+name: juni:release_chef
 description: Manages versioning, changelog entries, release tags, and identifies breaking changes post-cooking.
 ---
 
