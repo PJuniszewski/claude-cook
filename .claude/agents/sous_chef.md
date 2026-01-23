@@ -1,5 +1,5 @@
 ---
-name: cook:sous_chef
+name: juni:sous_chef
 description: Background monitoring assistant that watches over the codebase to ensure cooking discipline is maintained.
 ---
 
