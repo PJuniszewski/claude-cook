@@ -1,20 +1,21 @@
-# claude-cook Project Rules
+# juni Plugin Project Rules
 
 ## Purpose
 
-This repo contains `/cook` - a Claude Code custom command that enforces structured, multi-phase development workflows. Clone it, copy files, start cooking.
+This repo contains the **juni** plugin - a Claude Code plugin suite combining:
+- `/juni:cook` - Structured feature development workflows
+- `/juni:guard` - Epistemic safety for JSON data
 
 ## Quick Start
 
 ```bash
-# Copy to Claude Code config
-cp -r .claude/commands ~/.claude/
-cp -r .claude/skills ~/.claude/
-cp -r .claude/templates ~/.claude/
-cp -r .claude/agents ~/.claude/
+# Install from marketplace
+claude /plugin install juni-skills:juni
+claude /plugin enable juni
 
-# Run your first cook
-/cook Add user authentication --well-done
+# Run commands
+/juni:cook Add user authentication --well-done
+/juni:guard data.json
 ```
 
 ## Project Conventions
@@ -22,16 +23,19 @@ cp -r .claude/agents ~/.claude/
 ### Folder Structure
 ```
 .claude/
-  commands/     # Command definitions (/cook, /dogfood)
+  commands/     # Command definitions (/juni:cook, /juni:guard, etc.)
   skills/       # Workflow implementations
   templates/    # Checklists, artifact templates
   agents/       # Chef definitions (reviewers)
+  hooks/        # Event hooks
+scripts/        # Python/bash scripts
 examples/       # Sample cook runs
 docs/           # Additional documentation
 ```
 
 ### Naming
 - Chefs: `<role>_chef.md` (e.g., `engineer_chef.md`)
+- Agents use `juni:` prefix (e.g., `juni:engineer_chef`)
 - Artifacts: `<slug>.<date>.cook.md`
 - Templates: lowercase with hyphens
 
@@ -66,9 +70,9 @@ See [CHEF_MATRIX.md](CHEF_MATRIX.md) for inputs/outputs.
 ## Anti-patterns
 
 See [ANTI_PATTERNS.md](ANTI_PATTERNS.md). Key points:
-- /cook is NOT for "generate entire app"
-- /cook does NOT replace human review
-- If /cook slows you down, use `--microwave`
+- /juni:cook is NOT for "generate entire app"
+- /juni:cook does NOT replace human review
+- If /juni:cook slows you down, use `--microwave`
 
 ## Troubleshooting
 
