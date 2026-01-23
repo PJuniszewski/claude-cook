@@ -1,19 +1,27 @@
-# claude-cook
+# juni
 
-A Claude Code custom command that enforces a disciplined, multi-phase development workflow. Think of it as preparing a dish: ingredients must be fresh, cooking must be thorough, and plating must be precise.
+**Juni Skills Suite** - A unified Claude Code plugin combining feature development workflows (`/juni:cook`) and context safety tools (`/juni:guard`).
 
-`/cook` prevents shipping raw code by requiring structured planning, review phases, and documented decisions before implementation begins.
+## What's Included
+
+| Command | Description |
+|---------|-------------|
+| `/juni:cook` | Structured feature development with planning phases |
+| `/juni:cook-menu` | Interactive artifact management |
+| `/juni:cook-stats` | Analytics and insights for cook artifacts |
+| `/juni:sous-chef` | Background monitoring for cooking discipline |
+| `/juni:guard` | Epistemic safety for JSON data in prompts |
 
 ## Installation
 
-### Via Juni-Tools Marketplace
+### Via Juni-Skills Marketplace
 
 ```bash
 # Add the marketplace (run /plugin, select "Add Marketplace", enter: PJuniszewski/juni-skills-marketplace)
 
 # Install and enable
-claude /plugin install juni-skills:cook
-claude /plugin enable cook
+claude /plugin install juni-skills:juni
+claude /plugin enable juni
 ```
 
 ### Via skills.sh
@@ -22,31 +30,33 @@ claude /plugin enable cook
 npx skills add PJuniszewski/claude-cook
 ```
 
-Or install specific skill:
-```bash
-npx skills add PJuniszewski/claude-cook --skill cook-menu
-```
-
 ### Verify Installation
 
 ```bash
 # Check available commands
 /help
 
-# Test the command
-/cook Add a simple feature --dry-run
+# Test cook
+/juni:cook Add a simple feature --dry-run
+
+# Test guard
+/juni:guard '[{"test": 1}]'
 ```
 
-## Usage
+---
+
+## /juni:cook - Feature Development
+
+`/juni:cook` prevents shipping raw code by requiring structured planning, review phases, and documented decisions before implementation begins.
 
 ### Well-Done Mode (default)
 
 Full governance cooking with all review phases:
 
 ```
-/cook Add SSE streaming blocks --well-done
-/cook Add user authentication with OAuth
-/cook Implement real-time notifications
+/juni:cook Add SSE streaming blocks --well-done
+/juni:cook Add user authentication with OAuth
+/juni:cook Implement real-time notifications
 ```
 
 ### Microwave Mode
@@ -54,14 +64,14 @@ Full governance cooking with all review phases:
 Speed-optimized for low-risk changes:
 
 ```
-/cook Fix crash in SettingsActivity --microwave
-/cook Fix null pointer in payment handler --microwave
-/cook Update error message text --microwave
+/juni:cook Fix crash in SettingsActivity --microwave
+/juni:cook Fix null pointer in payment handler --microwave
+/juni:cook Update error message text --microwave
 ```
 
-## What It Generates
+### What It Generates
 
-Each `/cook` run produces an artifact in `cook/<slug>.<date>.cook.md`:
+Each `/juni:cook` run produces an artifact in `cook/<slug>.<date>.cook.md`:
 
 ```markdown
 # Cooking Result
@@ -85,9 +95,9 @@ Approved
 - Reason: Aligns with Q1 real-time features roadmap
 
 ## Pre-mortem
-1. Connection drops silently → mitigation: heartbeat + reconnect logic
-2. Memory leak from unclosed streams → mitigation: cleanup on unmount
-3. Server overload from many connections → mitigation: connection pooling
+1. Connection drops silently -> mitigation: heartbeat + reconnect logic
+2. Memory leak from unclosed streams -> mitigation: cleanup on unmount
+3. Server overload from many connections -> mitigation: connection pooling
 
 ## Patch Plan
 - Files to modify:
@@ -96,7 +106,7 @@ Approved
 - Tests to run: streaming.test.ts, integration/sse.test.ts
 ```
 
-## Microwave Blockers
+### Microwave Blockers
 
 These topics **automatically escalate** to `--well-done`:
 
@@ -108,7 +118,7 @@ These topics **automatically escalate** to `--well-done`:
 | UI flow changes | UX impact |
 | payments / purchase / paywall | Financial/compliance risk |
 
-## Cooking Statuses
+### Cooking Statuses
 
 | Status | Meaning |
 |--------|---------|
@@ -119,6 +129,89 @@ These topics **automatically escalate** to `--well-done`:
 | `well-done` | Approved, ready to implement |
 | `ready-for-merge` | Post QA/Security |
 | `plated` | Shipped |
+
+---
+
+## /juni:guard - Context Safety
+
+`/juni:guard` prevents LLMs from reasoning with unjustified certainty when input data is incomplete.
+
+### Features
+
+- **Lossless reduction** - Minify, columnar transform, remove nulls
+- **Token counting** - API or heuristic fallback
+- **Decision engine** - ALLOW / SAMPLE / BLOCK
+- **Intelligent trimming** - First + last + evenly-spaced sampling
+- **Forensic detection** - Warns when specific record queries detected
+
+### Usage
+
+```bash
+# Analyze a file
+/juni:guard my_data.json
+
+# Analyze inline JSON data
+/juni:guard '[{"id": 1}, {"id": 2}]'
+
+# Force through despite warnings
+/juni:guard my_data.json --force
+
+# Check if forensic query is safe
+/juni:guard logs.json --mode forensics
+
+# Use larger token budget
+/juni:guard data.json --budget-tokens 5000
+```
+
+### Semantic Modes
+
+| Mode | Sampling | Use Case |
+|------|----------|----------|
+| `analysis` | Allowed | "What categories exist?", "Price range?" |
+| `summary` | Aggressive | "Describe the data structure" |
+| `forensics` | **BLOCKED** | "Why did request id=X fail?" |
+
+### Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TOKEN_GUARD_MIN_CHARS` | `6000` | Below = always allow |
+| `TOKEN_GUARD_WARN_CHARS` | `15000` | Above = warn |
+| `TOKEN_GUARD_HARD_LIMIT_CHARS` | `100000` | Above = hard block |
+| `TOKEN_GUARD_MODEL` | `claude-sonnet-4-20250514` | Model for token counting |
+| `TOKEN_GUARD_PROMPT_LIMIT` | `3500` | Default token budget |
+
+---
+
+## Additional Tools
+
+### /juni:cook-menu
+
+Interactive artifact management:
+- Compare artifacts
+- Validate against requirements
+- View status dashboard
+
+### /juni:cook-stats
+
+```
+/juni:cook-stats                           # Show overall statistics
+/juni:cook-stats --since 2026-01-01        # Filter by date
+/juni:cook-stats search "authentication"   # Search artifacts
+/juni:cook-stats similar src/auth.ts       # Find similar by files
+```
+
+### /juni:sous-chef
+
+Background monitoring:
+```
+/juni:sous-chef monitor                    # Detect uncooked sensitive changes
+/juni:sous-chef drift cook/feature.cook.md # Compare plan vs implementation
+/juni:sous-chef postmortem cook/feature.cook.md  # Analyze predictions
+/juni:sous-chef suggest                    # Get governance suggestions
+```
+
+---
 
 ## Customizing Agents (Chefs)
 
@@ -132,11 +225,13 @@ Create project-specific chefs in `.claude/agents/`:
   security_chef.md   # Security audit
 ```
 
-Project chefs override system-wide defaults. See `.claude/agents/README.md` for details.
+Project chefs override system-wide defaults.
+
+---
 
 ## Tips for Best Results
 
-`/cook` extracts project context during Phase 0. The more context available, the better the output.
+`/juni:cook` extracts project context during Phase 0. The more context available, the better the output.
 
 **Recommended project setup:**
 
@@ -147,267 +242,44 @@ Project chefs override system-wide defaults. See `.claude/agents/README.md` for 
 | `docs/` | Architecture decisions, API specs, ADRs |
 | `.claude/agents/` | Project-specific review chefs |
 
-**In your `CLAUDE.md`, consider documenting:**
-
-- Tech stack and versions
-- Coding conventions and style
-- Security requirements
-- Testing expectations
-- Forbidden patterns or deprecated approaches
-- Team-specific workflows
-
-**Example `CLAUDE.md`:**
-
-```markdown
-# Project Rules
-
-## Stack
-- TypeScript 5.x, React 18, Node 20
-- PostgreSQL with Prisma ORM
-
-## Conventions
-- Functional components only
-- No default exports
-- All API routes require authentication
-
-## Security
-- No secrets in code
-- All user input must be validated with zod
-
-## Testing
-- Unit tests required for business logic
-- E2E tests for critical user flows
-```
-
-The more explicit your project documentation, the more accurate `/cook` will be at detecting conflicts, assessing risk, and generating relevant review checklists.
+---
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [CLAUDE.md](CLAUDE.md) | Project rules for this repository (dogfooding example) |
-| [CHEF_MATRIX.md](CHEF_MATRIX.md) | Who does what - chef responsibilities and phases |
-| [COOK_CONTRACT.md](COOK_CONTRACT.md) | Required sections for valid cook artifacts |
-| [ANTI_PATTERNS.md](ANTI_PATTERNS.md) | What `/cook` is NOT - common misuses |
-| [COMPARISON.md](COMPARISON.md) | `/cook` vs prompt spaghetti - when to use what |
-| [examples/quickstart/](examples/quickstart/) | Full walkthrough from request to artifact |
+| [CLAUDE.md](CLAUDE.md) | Project rules for this repository |
+| [CHEF_MATRIX.md](CHEF_MATRIX.md) | Who does what - chef responsibilities |
+| [COOK_CONTRACT.md](COOK_CONTRACT.md) | Required sections for valid artifacts |
+| [ANTI_PATTERNS.md](ANTI_PATTERNS.md) | What `/juni:cook` is NOT |
+| [COMPARISON.md](COMPARISON.md) | When to use what |
 
-## Diff & Versioning
+---
 
-Use `/cook-menu` to compare artifacts interactively, or ask Claude directly:
+## Migration from cook/context-guard
 
-```
-"Compare cook/feature-a.cook.md with cook/feature-b.cook.md"
-"What changed in the auth artifact since last week?"
-```
+If you had the old plugins installed:
 
-Output shows:
-- Added sections (new in second file)
-- Removed sections (missing in second file)
-- Modified sections (content changed)
-- Summary of total changes
+```bash
+# Remove old plugins
+claude /plugin uninstall juni-skills:cook
+claude /plugin uninstall juni-skills:context-guard
 
-Each artifact includes a `## Changelog` section for tracking version history within the file.
-
-## Preview Mode
-
-Use `--dry-run` to see what `/cook` will do without executing:
-
-```
-/cook Add feature X --dry-run
+# Install unified plugin
+claude /plugin install juni-skills:juni
+claude /plugin enable juni
 ```
 
-Shows:
-- Which chefs will be consulted
-- Which phases will run
-- Whether prerequisites are met
-- Potential blockers
+**Command changes:**
+| Old | New |
+|-----|-----|
+| `/cook` | `/juni:cook` |
+| `/cook-menu` | `/juni:cook-menu` |
+| `/cook-stats` | `/juni:cook-stats` |
+| `/sous-chef` | `/juni:sous-chef` |
+| `/guard` | `/juni:guard` |
 
-## Validation
-
-Validate cook artifacts against mode-specific requirements:
-
-```
-/cook-menu
-# Then select "Validate" from the menu
-```
-
-Or ask Claude directly:
-```
-"Validate cook/feature.cook.md"
-```
-
-Checks include:
-- Required sections present (scope, pre-mortem, tests, etc.)
-- No TBD/TODO placeholders
-- Ownership assigned
-- Minimum test cases defined
-- Rollback plan documented
-
-Use `/cook-menu` for interactive artifact management (validate, compare, view status).
-
-## Recipe Library (Similar Dishes)
-
-When you run `/cook`, similar past artifacts are automatically surfaced:
-
-```
-/cook Add session timeout
-
-🔍 Similar dishes found in your kitchen:
-┌──────────────────────────────────────────────────────────────┐
-│ 1. user-auth.2026-01-05.cook.md (78% similar)                │
-│    "Add user authentication with OAuth"                       │
-│    Files: src/auth/*, src/session.ts                          │
-│    Key decision: Used JWT with 1h expiry                      │
-├──────────────────────────────────────────────────────────────┤
-│ 2. session-refresh.2026-01-12.cook.md (65% similar)          │
-│    "Implement token refresh flow"                             │
-│    Files: src/session.ts, lib/token.ts                        │
-│    Key decision: Refresh 5min before expiry                   │
-└──────────────────────────────────────────────────────────────┘
-💡 Consider reusing patterns from these artifacts.
-```
-
-This helps you:
-- **Reuse patterns** from similar past features
-- **Recall decisions** and why they were made
-- **Stay consistent** with related work
-
-Similarity is calculated from files touched (50%), title keywords (30%), and feature keywords (20%).
-
-## Analytics
-
-Track cooking metrics with `/cook-stats`:
-
-```
-/cook-stats                           # Show overall statistics
-/cook-stats --since 2026-01-01        # Filter by date
-/cook-stats search "authentication"   # Search artifacts
-/cook-stats similar src/auth.ts       # Find similar by files
-/cook-stats timeline                  # Show timeline
-```
-
-Output:
-```
-📊 Cook Analytics (all time)
-────────────────────────────────────────
-Total cooks: 12
-  • 8 well-done, 4 microwave
-
-Status breakdown:
-  ✅ well-done: 6
-  🚀 ready-for-merge: 2
-  🔥 cooking: 1
-
-Completion rate: 67%
-
-Hot files:
-  • src/auth/* (5 cooks)
-  • api/routes.ts (4 cooks)
-```
-
-## Sous Chef (Background Monitoring)
-
-Sous Chef watches over your kitchen to ensure cooking discipline is maintained:
-
-```
-/sous-chef monitor                    # Detect uncooked sensitive changes
-/sous-chef monitor --since HEAD~20    # Check specific commit range
-/sous-chef drift cook/feature.cook.md # Compare plan vs implementation
-/sous-chef postmortem cook/feature.cook.md  # Analyze predictions vs outcomes
-/sous-chef suggest                    # Get governance suggestions
-```
-
-### Change Monitor Output
-```
-======================================
-  SOUS CHEF - Change Monitor Report
-======================================
-
-Found 2 commit(s) with uncooked sensitive changes:
-
-  abc1234 - Add login endpoint
-    Date: 2026-01-20 10:30:00
-    Sensitive files:
-      - src/auth/login.ts
-      - api/auth/routes.ts
-
---------------------------------------
-Recommendation: Run /cook for these changes
-```
-
-### Drift Detection Output
-```
-======================================
-  SOUS CHEF - Drift Detection Report
-======================================
-
-Artifact: feature-auth
-Status:   well-done
-
-DRIFT DETECTED
-
-Unplanned changes (scope creep): 2
-  + src/utils/helper.ts
-  + tests/extra.test.ts
-
-Missing from implementation: 1
-  - src/auth/oauth.ts
-```
-
-Sous Chef helps you:
-- **Catch uncooked changes** before they cause problems
-- **Detect scope creep** in implementations
-- **Learn from past predictions** to improve future risk assessments
-- **Identify hot files** that need more governance
-
-## Implementation Bridge
-
-Connect planning to execution - ask Claude:
-
-```
-"Generate file stubs from cook/feature.cook.md"
-"Create PR description from the auth artifact"
-"Link cook/feature.cook.md to PR #123"
-```
-
-Or use `/cook-menu` for interactive options.
-
-## MCP Dashboard
-
-The cook plugin includes an MCP server for Claude integration (auto-configured when plugin is enabled):
-
-```json
-// .mcp.json (auto-configured by plugin)
-{
-  "cook-dashboard": {
-    "command": "node",
-    "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/mcp-server.js"]
-  }
-}
-```
-
-### Available Tools
-
-| Tool | Description |
-|------|-------------|
-| `cook_list` | List all artifacts with optional status filter |
-| `cook_status` | Get detailed status of specific artifact |
-| `cook_blockers` | List blocked artifacts with reasons |
-| `cook_search` | Search artifacts by keyword |
-
-### Example Usage in Claude
-
-```
-"What features are currently cooking?"
--> Claude uses cook_list tool
-
-"Show me blocked artifacts"
--> Claude uses cook_blockers tool
-
-"Find artifacts related to authentication"
--> Claude uses cook_search with query "authentication"
-```
+---
 
 ## License
 
