@@ -1,7 +1,7 @@
 ---
 description: Feature development with guardrails. Plan → Review → Code → Ship.
 argument-hint: <feature description> [--well-done | --microwave]
-allowed-tools: Write, Read, Glob, Grep, Edit, Task, Bash
+allowed-tools: Write, Read, Glob, Grep, Edit, Task, Bash, TaskCreate, TaskUpdate, TaskList
 ---
 
 # /cook Command Specification
@@ -388,6 +388,70 @@ Only AFTER artifact exists:
 
 1. Update artifact status to final state
 2. Produce final Cooking Result summary
+
+---
+
+## Tasks Integration (Claude Code v2.1.16+)
+
+Cook uses the Tasks API to track phase progress, providing visibility via `/tasks` command.
+
+### Task Creation (after artifact)
+
+Immediately after creating the artifact file, create tasks for all phases:
+
+```
+TaskCreate({
+  subject: "[cook] Phase 0: Scan project context",
+  description: "Scan CLAUDE.md, agents, templates for project rules",
+  activeForm: "Scanning project context..."
+})
+→ Returns task_id_0
+
+TaskCreate({
+  subject: "[cook] Step 1: Analyze feature request",
+  description: "Parse feature, identify modules, check microwave blockers",
+  activeForm: "Analyzing feature..."
+})
+→ Returns task_id_1
+
+TaskUpdate({ taskId: task_id_1, addBlockedBy: [task_id_0] })
+
+... (repeat for Steps 2-7 with proper blockedBy chain)
+```
+
+### Phase Mapping
+
+| Cook Phase | Task Subject | blockedBy |
+|------------|--------------|-----------|
+| Phase 0 | `[cook] Phase 0: Scan project context` | (none) |
+| Step 1 | `[cook] Step 1: Analyze feature request` | Phase 0 |
+| Step 2 | `[cook] Step 2: Product review` | Step 1 |
+| Step 3 | `[cook] Step 3: UX review` | Step 2 |
+| Step 4 | `[cook] Step 4: Implementation plan` | Step 3 |
+| Step 5 | `[cook] Step 5: QA review` | Step 4 |
+| Step 6 | `[cook] Step 6: Security review` | Step 5 |
+| Step 7 | `[cook] Step 7: Documentation` | Step 6 |
+
+### Task Updates
+
+As each phase completes:
+1. `TaskUpdate({ taskId: <phase_id>, status: "completed" })`
+2. Next phase automatically unblocked
+3. Update artifact with phase results
+
+### Microwave Mode Tasks
+
+For `--microwave`, create only:
+- Step 1: Analyze feature
+- Step 4: Implementation plan
+- Step 5: QA review (1-2 tests)
+
+### Graceful Degradation
+
+If Tasks API is unavailable (older Claude Code or `CLAUDE_CODE_ENABLE_TASKS=false`):
+- Cook proceeds normally without task tracking
+- Artifact remains the source of truth
+- No errors or warnings needed
 
 ---
 

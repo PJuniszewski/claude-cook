@@ -74,6 +74,17 @@ See [ANTI_PATTERNS.md](ANTI_PATTERNS.md). Key points:
 - /juni:cook does NOT replace human review
 - If /juni:cook slows you down, use `--microwave`
 
+## Tasks API Integration
+
+Since Claude Code v2.1.16, `/juni:cook` uses the Tasks API for progress tracking:
+
+- Each cook phase creates a Task visible in `/tasks`
+- Phases are linked via `blockedBy` to enforce sequence
+- Progress persists across sessions
+- Use `[cook]` prefix to identify cook-related tasks
+
+**Note:** Tasks complement artifacts - artifact is the source of truth for decisions, Tasks provide visibility.
+
 ## Troubleshooting
 
 | Problem | Solution |
