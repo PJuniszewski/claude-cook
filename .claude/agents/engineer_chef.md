@@ -36,8 +36,39 @@ Creates implementation plans, defines technical approach, identifies files to mo
 - [ ] <test case>
 ```
 
+### Architecture Diagram (REQUIRED)
+
+Generate an ASCII diagram showing component relationships:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    NEW COMPONENTS                       │
+├─────────────────────────────────────────────────────────┤
+│  ┌──────────────┐          ┌──────────────┐            │
+│  │ ComponentA   │──calls───▶│ ComponentB   │            │
+│  └──────────────┘          └──────────────┘            │
+└─────────────────────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────┐
+│                 EXISTING COMPONENTS                     │
+├─────────────────────────────────────────────────────────┤
+│  ┌──────────────┐          ┌──────────────┐            │
+│  │ ExistingX    │          │ ExistingY    │            │
+│  └──────────────┘          └──────────────┘            │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Diagram Requirements:**
+- Use box-drawing characters: ┌ ┐ └ ┘ │ ─ ├ ┤ ┬ ┴ ┼
+- Use arrows: ▶ ▼ ◀ ▲ for flow direction
+- Separate NEW vs EXISTING components visually
+- Label connections with action/data being passed
+- Max ~8 components (omit trivial utilities)
+
 ### Artifacts
 - Section in cook artifact: "Patch Plan"
+- Section in cook artifact: "Architecture Diagram"
 - Optional: `IMPLEMENTATION_PLAN.md` for complex features
 
 ## Heuristics
