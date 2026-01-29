@@ -4,6 +4,43 @@ All notable changes to claude-cook will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.0] - 2026-01-29
+
+### Added
+- **Sanitation Inspector** (`/juni:inspect`): Post-implementation code review
+  - On-demand inspection via `/juni:inspect [artifact]`
+  - Surprise inspections on PR/MR merge for high-risk changes
+  - Parallel inspection agents: Hygiene, Recipe Compliance, Safety
+  - Kitchen-themed humor (sanepid metaphor)
+  - Inspection report appended to cook artifact
+- **GitLab support**: Surprise inspections trigger on `glab mr merge`
+- **Unit tests** for inspect command/agent (`test/inspect.test.js`)
+
+### Changed
+- Updated CHEF_MATRIX.md with sanitation_inspector_chef role
+- Updated README.md with `/juni:inspect` documentation
+
+## [2.1.0] - 2026-01-29
+
+### Added
+- **Step 0.5 Kitchen Recon** (well-done mode): Parallel codebase exploration
+  - Launches 2-3 Explore agents before planning
+  - Analyzes similar implementations, integration points, risk areas
+- **Architecture diagrams**: ASCII box-drawing in engineer_chef output
+  - Shows NEW vs EXISTING components
+  - Template with proper box-drawing characters
+
+## [2.0.0] - 2026-01-27
+
+### Changed
+- **Renamed plugin**: `cook` → `juni`
+- **Merged context-guard**: Now part of juni suite
+- All commands now use `juni:` prefix (`/juni:cook`, `/juni:guard`, etc.)
+
+### Added
+- Tasks API integration for progress tracking
+- `[cook]` prefix for cook-related tasks
+
 ## [1.5.3] - 2026-01-21
 
 ### Fixed

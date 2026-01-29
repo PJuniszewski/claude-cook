@@ -38,6 +38,38 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/.claude/hooks/cook-owner.sh"
           }
         ]
+      },
+      {
+        "matcher": {
+          "toolName": "Bash",
+          "toolInput": {
+            "command": {
+              "contains": "gh pr merge"
+            }
+          }
+        },
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "SURPRISE SANITATION INSPECTION TRIGGER (GitHub)\n\nA GitHub PR was just merged. Check if it warrants a surprise sanitation inspection.\n\n**Trigger patterns (check merged files):**\n- `auth/`, `permissions/`, `crypto/` - authentication/authorization changes\n- `schema/`, `migrations/`, `storage/` - database changes\n- `api/` (public contracts) - breaking change risk\n- `payment/`, `billing/`, `subscription/` - financial risk\n- Large PRs (>300 lines changed)\n- Files flagged as high-risk in any recent cook artifact pre-mortem\n\n**To check:**\n1. Run `gh pr view --json files,additions,deletions` to get PR details\n2. Check if any files match trigger patterns\n3. Check if additions+deletions > 300\n\n**If trigger matches:**\n1. Find the associated cook artifact (look in cook/ for matching feature)\n2. Announce: \"🧹 SANITATION INSPECTION! The inspector has arrived for a surprise visit...\"\n3. Run the /juni:inspect command with --surprise flag\n\n**If no trigger matches:**\n- Allow the merge silently, no action needed\n\n**IMPORTANT:** Only trigger inspection if a cook artifact exists for this feature. If no artifact, skip inspection."
+          }
+        ]
+      },
+      {
+        "matcher": {
+          "toolName": "Bash",
+          "toolInput": {
+            "command": {
+              "contains": "glab mr merge"
+            }
+          }
+        },
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "SURPRISE SANITATION INSPECTION TRIGGER (GitLab)\n\nA GitLab MR was just merged. Check if it warrants a surprise sanitation inspection.\n\n**Trigger patterns (check merged files):**\n- `auth/`, `permissions/`, `crypto/` - authentication/authorization changes\n- `schema/`, `migrations/`, `storage/` - database changes\n- `api/` (public contracts) - breaking change risk\n- `payment/`, `billing/`, `subscription/` - financial risk\n- Large MRs (>300 lines changed)\n- Files flagged as high-risk in any recent cook artifact pre-mortem\n\n**To check:**\n1. Run `glab mr view --output json` to get MR details\n2. Check if any files match trigger patterns\n3. Check if changes_count > 300\n\n**If trigger matches:**\n1. Find the associated cook artifact (look in cook/ for matching feature)\n2. Announce: \"🧹 SANITATION INSPECTION! The inspector has arrived for a surprise visit...\"\n3. Run the /juni:inspect command with --surprise flag\n\n**If no trigger matches:**\n- Allow the merge silently, no action needed\n\n**IMPORTANT:** Only trigger inspection if a cook artifact exists for this feature. If no artifact, skip inspection."
+          }
+        ]
       }
     ]
   }

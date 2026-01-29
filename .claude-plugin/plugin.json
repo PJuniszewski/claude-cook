@@ -1,6 +1,6 @@
 {
   "name": "juni",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Juni Skills Suite - Feature development workflows and context safety tools.",
   "author": {
     "name": "Patryk Juniszewski",
@@ -18,6 +18,8 @@
     "feature-development",
     "context-guard",
     "tokens",
-    "safety"
+    "safety",
+    "code-review",
+    "inspection"
   ]
 }

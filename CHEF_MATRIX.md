@@ -14,6 +14,7 @@ Quick reference for who does what in the `/cook` workflow.
 | Security Chef | Step 6 | Vulnerability audit, threat assessment |
 | Docs Chef | Step 7 | Documentation updates, usage examples |
 | Release Chef | Post-cook | Versioning, changelog, release notes |
+| Sanitation Inspector | Post-cook | Code hygiene, plan compliance, quality review |
 
 ---
 
@@ -123,6 +124,30 @@ Quick reference for who does what in the `/cook` workflow.
 
 ---
 
+### Sanitation Inspector Chef
+
+| Attribute | Value |
+|-----------|-------|
+| **Phase** | Post-cooking (after implementation) |
+| **Mode** | On demand + automatic (surprise inspections) |
+| **Inputs** | Cook artifact, implementation, git history |
+| **Outputs** | Inspection report, violations list, hygiene score |
+| **Stop conditions** | High severity violations block merge |
+| **Pitfalls** | Over-inspecting trivial changes, false positives |
+
+**Trigger Conditions:**
+- On-demand via `/juni:inspect`
+- Automatic on PR merge for: auth, schema, API, payment changes
+- Large PRs (>300 lines)
+- High-risk files flagged in pre-mortem
+
+**Inspection Areas:**
+- Hygiene (error handling, logging, tests)
+- Recipe Compliance (plan vs implementation)
+- Safety (input validation, auth checks)
+
+---
+
 ## Mode Participation
 
 | Chef | well-done | microwave |
@@ -135,6 +160,7 @@ Quick reference for who does what in the `/cook` workflow.
 | Security Chef | Required | Conditional (auth/API only) |
 | Docs Chef | Conditional | Skip (unless behavior change) |
 | Release Chef | On demand | On demand |
+| Sanitation Inspector | On demand + auto | On demand + auto |
 
 ---
 
