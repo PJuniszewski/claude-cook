@@ -10,6 +10,7 @@
 | `/juni:cook-menu` | Interactive artifact management |
 | `/juni:cook-stats` | Analytics and insights for cook artifacts |
 | `/juni:sous-chef` | Background monitoring for cooking discipline |
+| `/juni:inspect` | Post-implementation sanitation inspection |
 | `/juni:guard` | Epistemic safety for JSON data in prompts |
 
 ## Installation
@@ -210,6 +211,31 @@ Background monitoring:
 /juni:sous-chef postmortem cook/feature.cook.md  # Analyze predictions
 /juni:sous-chef suggest                    # Get governance suggestions
 ```
+
+### /juni:inspect
+
+Post-implementation sanitation inspection - code review that verifies implementation matches the cook artifact:
+
+```
+/juni:inspect                              # Inspect most recent well-done artifact
+/juni:inspect cook/feature.cook.md         # Inspect specific artifact
+/juni:inspect --surprise                   # Force surprise inspection mode
+```
+
+**What it checks:**
+- **Hygiene** - Error handling, logging, test coverage
+- **Recipe Compliance** - Plan vs implementation drift
+- **Safety** - Input validation, auth checks
+
+**Surprise Inspections:**
+Automatically triggered on PR merge for high-risk changes:
+- Auth, permissions, crypto changes
+- Schema, migrations, storage changes
+- Public API contract changes
+- Payment, billing changes
+- Large PRs (>300 lines)
+
+The inspection report is appended to the cook artifact with violations and recommendations.
 
 ---
 
