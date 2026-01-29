@@ -103,6 +103,25 @@ _Pending..._
 
 ---
 
+# Step 0.5 - Kitchen Recon (well-done only)
+
+## Similar Implementations Found
+| Pattern | Location | Reusability |
+|---------|----------|-------------|
+| _Pending..._ | | |
+
+## Integration Points
+| System | Connection | Impact |
+|--------|------------|--------|
+| _Pending..._ | | |
+
+## Risk Areas
+| File/Area | Risk Level | Mitigation |
+|-----------|------------|------------|
+| _Pending..._ | | |
+
+---
+
 # Step 1 - Read the Order
 
 ## Feature Summary
@@ -179,6 +198,11 @@ _Pending..._
 ### Trade-offs
 - Sacrificing: _what we give up_
 - Gaining: _what we get_
+
+## Architecture Diagram
+```
+[ASCII diagram here - see engineer_chef for format]
+```
 
 ## Patch Plan
 
@@ -756,6 +780,65 @@ This Phase 0 output informs ALL subsequent cooking steps.
 4. Add entry to Decision Log
 
 **DO NOT proceed until artifact is updated.**
+
+---
+
+### Step 0.5 - Kitchen Recon (well-done only)
+
+**Triggered:** Automatically after artifact creation in well-done mode.
+
+**Purpose:** Deep codebase understanding before planning.
+
+**Execution:**
+Launch 2-3 Explore agents IN PARALLEL with different focuses:
+
+1. **Similar Implementations Agent**
+   - Prompt: "Find existing implementations similar to '<feature>'.
+     Look for: related components, similar data flows, reusable patterns.
+     Report: file paths, key patterns, code to reference."
+
+2. **Integration Points Agent**
+   - Prompt: "Map integration points for '<feature>'.
+     Look for: entry points, APIs touched, data stores accessed, event systems.
+     Report: connection points, dependency graph, affected modules."
+
+3. **Risk Areas Agent** (optional, for complex features)
+   - Prompt: "Identify risk areas for implementing '<feature>'.
+     Look for: high-churn files, complex logic, missing tests, known issues.
+     Report: risky files, complexity hotspots, test coverage gaps."
+
+#### Output Format
+
+```markdown
+## Step 0.5 - Kitchen Recon
+
+### Similar Implementations Found
+| Pattern | Location | Reusability |
+|---------|----------|-------------|
+| | | |
+
+### Integration Points
+| System | Connection | Impact |
+|--------|------------|--------|
+| | | |
+
+### Risk Areas
+| File/Area | Risk Level | Mitigation |
+|-----------|------------|------------|
+| | | |
+```
+
+#### GATE: Write Step 0.5 to Artifact
+
+**STOP. Before proceeding to Step 1, you MUST:**
+
+1. Update artifact file - add Kitchen Recon findings after Phase 0
+2. Update `## Current Phase` to `Step 0.5 - Complete`
+3. Add entry to Decision Log with key recon insights
+
+**DO NOT proceed until artifact is updated.**
+
+**Skip condition:** If `--microwave` mode, skip this step entirely.
 
 ---
 
