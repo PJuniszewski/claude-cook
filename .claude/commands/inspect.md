@@ -4,16 +4,16 @@ argument-hint: [<artifact> | --surprise]
 allowed-tools: Bash, Read, Glob, Grep, Task
 ---
 
-# /code-inspection Command
+# /inspect Command
 
 Sanitation Inspector - post-implementation code review that verifies implementation matches the cook artifact plan.
 
 ## Syntax
 
 ```
-/juni:code-inspection                           Inspect most recent well-done artifact
-/juni:code-inspection <artifact>                Inspect specific artifact
-/juni:code-inspection --surprise                Force surprise inspection mode (dramatic entrance)
+/juni:inspect                           Inspect most recent well-done artifact
+/juni:inspect <artifact>                Inspect specific artifact
+/juni:inspect --surprise                Force surprise inspection mode (dramatic entrance)
 ```
 
 ## Options
@@ -183,26 +183,26 @@ Found:
 - Y medium severity issues (should fix)
 - Z low severity issues (nice to fix)
 
-Run `/juni:code-inspection` again after fixes to re-inspect.
+Run `/juni:inspect` again after fixes to re-inspect.
 ```
 
 ## Examples
 
 ```
-/juni:code-inspection
+/juni:inspect
 > 🧹 Sanitation inspection requested. Putting on the white gloves...
 > Inspecting: cook/add-user-auth.2026-01-29.cook.md
 > ...
 > ✅ Kitchen passed inspection. Certificate of cleanliness issued.
 
-/juni:code-inspection cook/payment-flow.2026-01-28.cook.md
+/juni:inspect cook/payment-flow.2026-01-28.cook.md
 > 🧹 Sanitation inspection requested. Putting on the white gloves...
 > Inspecting: cook/payment-flow.2026-01-28.cook.md
 > ...
 > ⚠️ Violations found! Kitchen must address issues before next service.
 > Found: 1 high, 2 medium severity issues.
 
-/juni:code-inspection --surprise
+/juni:inspect --surprise
 > 🧹 SANITATION INSPECTION! The inspector has arrived for a surprise visit...
 > *adjusts clipboard*
 > *puts on rubber gloves*
