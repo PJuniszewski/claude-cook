@@ -20,7 +20,7 @@ Sanitation Inspector - post-implementation code review that verifies **actual co
 /juni:inspect <artifact>                Inspect specific artifact
 /juni:inspect <artifact> --commit <sha> Inspect specific commit against artifact
 /juni:inspect --commit <sha>            Pure code review (no artifact, just diff review)
-/juni:inspect --surprise                Force surprise inspection mode (dramatic entrance)
+/juni:inspect --surprise                Surprise inspection (stricter, more thorough)
 ```
 
 ## Options
@@ -29,7 +29,7 @@ Sanitation Inspector - post-implementation code review that verifies **actual co
 |--------|-------------|
 | `<artifact>` | Path to cook artifact (e.g., `cook/add-auth.2026-01-29.cook.md`) |
 | `--commit <sha>` | Specify commit SHA to inspect (with or without artifact) |
-| `--surprise` | Trigger surprise inspection announcement |
+| `--surprise` | Surprise inspection mode (see below for differences) |
 
 ## Modes
 
@@ -38,6 +38,76 @@ Sanitation Inspector - post-implementation code review that verifies **actual co
 | **Artifact + Auto-detect** | Find artifact, find related commits, compare plan vs actual |
 | **Artifact + Manual commit** | Use specified artifact and commit, compare plan vs actual |
 | **Commit only** | Pure code review without artifact context (hygiene + safety only, no recipe compliance) |
+
+## Surprise Mode (`--surprise`)
+
+Surprise inspections are **stricter and more thorough** than regular inspections.
+
+### Differences from Regular Inspection
+
+| Aspect | Regular | Surprise |
+|--------|---------|----------|
+| **Confidence threshold** | >= 75% | >= 60% (flags more issues) |
+| **Agent model** | Sonnet | Opus (more thorough analysis) |
+| **Additional checks** | Standard 3 agents | + CLAUDE.md compliance check |
+| **Scope** | Only planned files | Planned files + adjacent files |
+| **Validation** | Validate high/medium | Validate all flagged issues |
+
+### When to Use Surprise Mode
+
+- High-risk changes (auth, payments, schema migrations)
+- Large diffs (>300 lines changed)
+- Changes from new contributors
+- Pre-release audits
+- Random spot checks (like real health inspections)
+
+### Automatic Surprise Inspections (via Hook)
+
+Set up a PostToolUse hook to automatically trigger surprise inspections:
+
+```json
+// .claude/hooks/hooks.json
+{
+  "hooks": [
+    {
+      "event": "PostToolUse",
+      "matcher": {
+        "tool": "Bash",
+        "command_pattern": "git push|gh pr merge"
+      },
+      "script": "inspect-trigger.sh"
+    }
+  ]
+}
+```
+
+```bash
+#!/bin/bash
+# .claude/hooks/inspect-trigger.sh
+
+# Get changed files
+CHANGED=$(git diff --name-only HEAD~1)
+
+# Check for high-risk patterns
+if echo "$CHANGED" | grep -qE "(auth|payment|migration|schema|crypto)"; then
+  echo "HIGH_RISK_DETECTED"
+  echo "Triggering surprise inspection..."
+  # The hook output will prompt Claude to run /juni:inspect --surprise
+fi
+```
+
+### Surprise Announcement
+
+```
+🧹 SANITATION INSPECTION! The inspector has arrived for a surprise visit...
+
+*adjusts clipboard*
+*puts on rubber gloves*
+*peers suspiciously at the kitchen*
+
+Kitchen being inspected: cook/<artifact>.cook.md
+Mode: SURPRISE (stricter criteria, Opus-level analysis)
+```
 
 ## Execution
 
@@ -251,11 +321,21 @@ git show <commit-sha> --stat
 - Run only Hygiene Agent + Safety Agent
 - Report format changes to "Pure Code Review" (no recipe compliance section)
 
+**Configuration based on mode:**
+
+| Setting | Regular | Surprise (`--surprise`) |
+|---------|---------|-------------------------|
+| Agent model | Sonnet | **Opus** |
+| Confidence threshold | >= 75% | **>= 60%** |
+| Agents | 3 (Recipe, Hygiene, Safety) | **4** (+ CLAUDE.md Compliance) |
+| File scope | Planned files only | **Planned + adjacent files** |
+
 **If artifact mode:**
-Spawn three Task agents in parallel (using Sonnet model). Each agent receives:
+Spawn agents in parallel. Each agent receives:
 - The artifact content (plan)
 - The actual git diff (implementation)
 - List of planned files
+- **[Surprise only]** Adjacent files (same directory as planned files)
 
 **CRITICAL: We only want HIGH SIGNAL issues.** Flag issues where:
 - Code will fail to compile or parse (syntax errors, missing imports)
@@ -342,8 +422,33 @@ Check the DIFF for:
 
 Only flag issues VISIBLE IN THE DIFF with HIGH CONFIDENCE.
 
-Score each finding 0-100 confidence. Only report findings >= 75.
+Score each finding 0-100 confidence. Only report findings >= 75 (or >= 60 in surprise mode).
 Output format: JSON array of {issue: "description", file: "path", line: N, severity: "high"|"medium"|"low", confidence: N}
+```
+
+---
+
+**4. CLAUDE.md Compliance Agent (Surprise Mode Only)**
+```
+You are auditing code changes for CLAUDE.md compliance.
+
+CLAUDE.md CONTENT:
+[paste CLAUDE.md content if exists]
+
+ACTUAL GIT DIFF:
+[paste full git diff here]
+
+Check the DIFF for violations of project rules defined in CLAUDE.md:
+1. Code style rules being violated
+2. Architectural patterns not followed
+3. Naming conventions broken
+4. Required patterns missing (e.g., error handling style)
+5. Forbidden patterns used
+
+Only flag CLEAR violations where you can quote the exact CLAUDE.md rule being broken.
+
+Score each finding 0-100 confidence. Only report findings >= 60.
+Output format: JSON array of {rule: "quoted CLAUDE.md rule", violation: "description", file: "path", line: N, confidence: N}
 ```
 
 ### Step 6: Validate Flagged Issues

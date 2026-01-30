@@ -243,6 +243,16 @@ Inspired by [Anthropic's code-review](https://github.com/anthropics/claude-code/
 - Deviation from artifact plan
 - Obvious security vulnerabilities
 
+**Surprise Mode (`--surprise`):**
+Stricter inspections for high-risk situations:
+| Aspect | Regular | Surprise |
+|--------|---------|----------|
+| Confidence threshold | >= 75% | >= 60% |
+| Agent model | Sonnet | Opus |
+| Additional checks | 3 agents | + CLAUDE.md compliance |
+
+Use for: auth changes, payments, schema migrations, large diffs, pre-release audits.
+
 **Edge Case Handling:**
 - Multiple artifacts? Interactive selection
 - No commits found? Option for manual SHA or pure code review
