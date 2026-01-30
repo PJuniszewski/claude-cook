@@ -214,26 +214,39 @@ Background monitoring:
 
 ### /juni:inspect
 
-Post-implementation sanitation inspection - code review that verifies implementation matches the cook artifact:
+Post-implementation sanitation inspection - code review that verifies **actual git diffs** match the cook artifact plan:
 
 ```
 /juni:inspect                              # Inspect most recent well-done artifact
 /juni:inspect cook/feature.cook.md         # Inspect specific artifact
+/juni:inspect artifact --commit abc123     # Inspect specific commit against artifact
+/juni:inspect --commit abc123              # Pure code review (no artifact)
 /juni:inspect --surprise                   # Force surprise inspection mode
 ```
 
-**What it checks:**
-- **Hygiene** - Error handling, logging, test coverage
-- **Recipe Compliance** - Plan vs implementation drift
-- **Safety** - Input validation, auth checks
+**Three Modes:**
+| Mode | Description |
+|------|-------------|
+| Artifact + Auto-detect | Find artifact, find related commits, compare plan vs actual |
+| Artifact + Manual commit | Use specified artifact and commit |
+| Commit only | Pure code review (hygiene + safety, no recipe compliance) |
 
-**Surprise Inspections:**
-Automatically triggered on PR merge for high-risk changes:
-- Auth, permissions, crypto changes
-- Schema, migrations, storage changes
-- Public API contract changes
-- Payment, billing changes
-- Large PRs (>300 lines)
+**What it checks:**
+- **Recipe Compliance** - Plan vs actual implementation (planned files, decisions, non-goals)
+- **Hygiene** - Error handling, edge cases, code consistency in the diff
+- **Safety** - Input validation, injection vectors, auth checks in the diff
+
+**High Signal Only:**
+Inspired by [Anthropic's code-review](https://github.com/anthropics/claude-code/tree/main/plugins/code-review), inspect only flags issues with high confidence:
+- Syntax errors, missing imports
+- Clear logic errors
+- Deviation from artifact plan
+- Obvious security vulnerabilities
+
+**Edge Case Handling:**
+- Multiple artifacts? Interactive selection
+- No commits found? Option for manual SHA or pure code review
+- Files don't match plan? Confirmation before proceeding
 
 The inspection report is appended to the cook artifact with violations and recommendations.
 
