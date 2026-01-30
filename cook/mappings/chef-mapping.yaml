@@ -1,0 +1,126 @@
+# Chef-to-Phase Mapping Configuration
+# ====================================
+# This file defines which Chefs are invoked for each /juni:cook phase,
+# conditional rules for adding Chefs, and the deterministic invocation order.
+#
+# Source of truth for Chef orchestration. Version-controlled and auditable.
+
+version: 1
+
+# =============================================================================
+# PHASE DEFINITIONS
+# =============================================================================
+# Maps each cooking phase to its required Chefs.
+# Required Chefs MUST be invoked for the phase to complete.
+
+phases:
+  scope:
+    required:
+      - product_chef
+
+  ux:
+    required:
+      - ux_chef
+
+  plan:
+    required:
+      - engineer_chef
+      - architect_chef
+
+  cooking:
+    required:
+      - engineer_chef
+
+  qa:
+    required:
+      - qa_chef
+
+  security:
+    required:
+      - security_chef
+
+  docs:
+    required:
+      - docs_chef
+
+  release:
+    required:
+      - release_chef
+
+  postmortem:
+    required:
+      - sanitation_inspector_chef
+
+# =============================================================================
+# CONDITIONAL RULES
+# =============================================================================
+# Rules are evaluated in order. Multiple rules may match.
+# When a rule matches, its `then` actions are applied.
+#
+# Condition types:
+#   - order_flags_any: Matches if Order.flags contains ANY of these values
+#   - tracker_labels_any: Matches if tracker.snapshot.labels contains ANY
+#   - tracker_components_any: Matches if tracker.snapshot.components contains ANY
+#   - tracker_issue_type_in: Matches if tracker.snapshot.issue_type is in list
+#
+# Actions:
+#   - add_required_chefs: Add these Chefs to the current phase
+#   - set.workflow_mode: Override workflow mode (microwave/well-done)
+
+rules:
+  # Rule 1: Security-sensitive changes
+  - when:
+      any:
+        - order_flags_any: ["auth", "payments", "pii", "crypto"]
+        - tracker_labels_any: ["security", "privacy"]
+        - tracker_components_any: ["auth", "payments"]
+    then:
+      add_required_chefs:
+        - security_chef
+      set:
+        workflow_mode: "well-done"
+
+  # Rule 2: UX-impacting changes
+  - when:
+      any:
+        - order_flags_any: ["ui", "ux"]
+        - tracker_labels_any: ["ux", "design"]
+    then:
+      add_required_chefs:
+        - ux_chef
+
+  # Rule 3: Production incidents / bugs
+  - when:
+      any:
+        - tracker_issue_type_in: ["Bug", "Incident"]
+        - order_flags_any: ["prod", "outage"]
+    then:
+      add_required_chefs:
+        - qa_chef
+        - release_chef
+      set:
+        workflow_mode: "well-done"
+
+# =============================================================================
+# CHEF ORDERING
+# =============================================================================
+# Deterministic invocation order when multiple Chefs are active in a phase.
+# Chefs not in this list are invoked last, in alphabetical order.
+
+ordering:
+  - product_chef
+  - ux_chef
+  - architect_chef
+  - engineer_chef
+  - qa_chef
+  - security_chef
+  - docs_chef
+  - release_chef
+  - sanitation_inspector_chef
+
+# =============================================================================
+# DEFAULTS
+# =============================================================================
+
+defaults:
+  workflow_mode: "microwave"
