@@ -6,12 +6,37 @@ allowed-tools: Bash, Read, Glob, Grep, Task, AskUserQuestion
 
 # /inspect Command
 
-Sanitation Inspector - post-implementation code review that verifies **actual code changes** match the cook artifact plan.
+Sanitation Inspector - post-implementation **CODE REVIEW** that verifies actual git diffs match the cook artifact plan.
+
+## What This Command Does
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  /juni:inspect                                                  │
+│                                                                 │
+│  1. Find artifact (plan)          cook/feature.cook.md          │
+│                 ↓                                               │
+│  2. Find related commits          git log, git show             │
+│                 ↓                                               │
+│  3. Get actual diff               git show <sha> -p             │
+│                 ↓                                               │
+│  4. CODE REVIEW                   Compare PLAN vs DIFF          │
+│     • Recipe Compliance           (planned files vs changed)    │
+│     • Hygiene                     (error handling, edge cases)  │
+│     • Safety                      (security issues in diff)     │
+│                 ↓                                               │
+│  5. Generate report               Append to artifact            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**THIS IS NOT:** A review of the artifact document itself.
+**THIS IS:** A code review of git commits against the artifact plan.
 
 **Agent assumptions (applies to all agents and subagents):**
 - All tools are functional. Do not test tools or make exploratory calls.
 - Only call a tool if required to complete the task.
-- This is a CODE REVIEW - you must examine actual git diffs, not just documentation.
+- This is a CODE REVIEW - you MUST run `git show` or `git diff` to get actual code changes.
+- Never review just the artifact markdown - always review the git diff.
 
 ## Syntax
 
@@ -203,7 +228,11 @@ Read the artifact and extract:
 
 ### Step 4: Find Related Commits and Get Actual Diff
 
-**CRITICAL: This step gets the ACTUAL CODE CHANGES to review.**
+**⚠️ MANDATORY: You MUST complete this step before launching agents.**
+
+This is the core of the inspection - without the git diff, you cannot do a code review.
+
+**DO NOT skip to Step 5 without running git commands to get the diff.**
 
 **If pure code review mode (--commit without artifact):** Skip to "Get the full diff" section below.
 
