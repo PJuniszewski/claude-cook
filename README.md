@@ -264,10 +264,10 @@ The inspection report is appended to the cook artifact with violations and recom
 
 ## Customizing Agents (Chefs)
 
-Create project-specific chefs in `.claude/agents/`:
+Create project-specific chefs in `.claude/chefs/`:
 
 ```
-.claude/agents/
+.claude/chefs/
   product_chef.md    # Scope decisions
   ux_chef.md         # UX review
   qa_chef.md         # Test planning
@@ -289,7 +289,7 @@ Project chefs override system-wide defaults.
 | `CLAUDE.md` | Project rules, constraints, conventions |
 | `README.md` | Project overview, architecture summary |
 | `docs/` | Architecture decisions, API specs, ADRs |
-| `.claude/agents/` | Project-specific review chefs |
+| `.claude/chefs/` | Project-specific review chefs |
 
 ---
 

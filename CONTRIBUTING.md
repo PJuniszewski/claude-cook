@@ -13,7 +13,7 @@
    cp -r .claude/commands ~/.claude/
    cp -r .claude/skills ~/.claude/
    cp -r .claude/templates ~/.claude/
-   cp -r .claude/agents ~/.claude/
+   cp -r .claude/chefs ~/.claude/
    ```
 
 3. Test the command:
@@ -23,9 +23,9 @@
 
 ## Adding a New Agent Template
 
-1. Create a new file in `.claude/agents/`:
+1. Create a new file in `.claude/chefs/`:
    ```
-   .claude/agents/your_chef.md
+   .claude/chefs/your_chef.md
    ```
 
 2. Follow the structure:
@@ -44,7 +44,7 @@
    <what this chef contributes to the artifact>
    ```
 
-3. Update `.claude/agents/README.md` to document the new chef.
+3. Update `.claude/chefs/README.md` to document the new chef.
 
 4. Submit a PR with:
    - The new agent file

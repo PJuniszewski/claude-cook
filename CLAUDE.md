@@ -91,6 +91,6 @@ Since Claude Code v2.1.16, `/juni:cook` uses the Tasks API for progress tracking
 |---------|----------|
 | "No CLAUDE.md found" | Create one or ignore (uses defaults) |
 | Output too verbose | Use `--microwave` for quick fixes |
-| Chef not activating | Check `.claude/agents/` has the file |
+| Chef not activating | Check `.claude/chefs/` has the file |
 | Stuck in Phase 0 | Provide more project context |
 | Artifact not created | Check `cook/` directory exists |

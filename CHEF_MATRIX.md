@@ -168,8 +168,8 @@ Quick reference for who does what in the `/cook` workflow.
 
 When multiple chef definitions exist:
 
-1. **Project-specific** (`<project>/.claude/agents/<name>_chef.md`)
-2. **System-wide** (`~/.claude/agents/<name>.md`)
+1. **Project-specific** (`<project>/.claude/chefs/<name>_chef.md`)
+2. **System-wide** (`~/.claude/chefs/<name>.md`)
 
 Project-specific chefs override system-wide chefs for the same role.
 
@@ -179,4 +179,4 @@ Project-specific chefs override system-wide chefs for the same role.
 
 - [COOK_CONTRACT.md](COOK_CONTRACT.md) - What each chef must produce
 - [ANTI_PATTERNS.md](ANTI_PATTERNS.md) - Common mistakes
-- Individual chef files in `.claude/agents/`
+- Individual chef files in `.claude/chefs/`
