@@ -15,14 +15,14 @@ During cooking, Claude Code consults different agents based on the current phase
 
 ## Agent Resolution Order
 
-1. **Project-specific agents** in `<project>/.claude/agents/`
-2. **System-wide agents** in `~/.claude/agents/`
+1. **Project-specific agents** in `<project>/.claude/chefs/`
+2. **System-wide agents** in `~/.claude/chefs/`
 
 Project agents override system defaults, allowing you to customize reviews for your specific codebase.
 
 ## Creating Custom Agents
 
-Create a new `.md` file in `.claude/agents/` with this structure:
+Create a new `.md` file in `.claude/chefs/` with this structure:
 
 ```markdown
 # Role
