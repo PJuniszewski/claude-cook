@@ -1,4 +1,5 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "juni-skills",
   "description": "Juni Skills Suite - Feature development workflows and context safety tools",
   "owner": {

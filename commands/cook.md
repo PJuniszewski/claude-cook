@@ -435,10 +435,10 @@ This command uses a layered agent system:
 
 **Required for best results (mise en place):**
 - `CLAUDE.md` in project root - defines project rules and constraints
-- `<project>/.claude/chefs/` - project-specific review agents
+- `<project>/.claude/chefs/` - project-specific review chefs
 
 **System-wide fallbacks (always available):**
-- `~/.claude/chefs/engineer.md` - generic engineering agent
+- `~/.claude/chefs/engineer.md` - generic engineering chef
 - `~/.claude/chefs/product.md` - product scope review
 - `~/.claude/chefs/designer.md` - UX/flow review
 - `~/.claude/chefs/security.md` - security audit
