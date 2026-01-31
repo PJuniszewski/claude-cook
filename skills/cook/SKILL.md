@@ -5,6 +5,7 @@ user-invocable: true
 ---
 
 # cook skill
+<<<<<<<< HEAD:skills/cook/SKILL.md
 
 ## ⛔ CRITICAL: PLANNING ONLY - NO CODE
 
@@ -287,6 +288,8 @@ _Pending..._
 **FIRST action = Create artifact file. No exceptions.**
 
 ---
+========
+>>>>>>>> feature/dry-run-validation-cook:.claude/skills/cook/SKILL.md
 
 ## Purpose
 Cook features through a structured, multi-phase development flow.

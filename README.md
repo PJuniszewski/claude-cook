@@ -305,6 +305,28 @@ Project chefs override system-wide defaults.
 
 ---
 
+## Diff & Versioning
+
+Compare two cook artifacts to see what changed:
+
+```bash
+# Compare two artifacts
+./scripts/cook-diff cook/feature-a.cook.md cook/feature-b.cook.md
+
+# Show changelog entries since a date
+./scripts/cook-diff cook/feature.cook.md --since 2026-01-01
+```
+
+Output shows:
+- Added sections (new in second file)
+- Removed sections (missing in second file)
+- Modified sections (content changed)
+- Summary of total changes
+
+Each artifact includes a `## Changelog` section for tracking version history within the file.
+
+---
+
 ## Migration from cook/context-guard
 
 If you had the old plugins installed:
@@ -329,6 +351,30 @@ claude /plugin enable juni
 | `/guard` | `/juni:guard` |
 
 ---
+
+## Validation
+
+Validate cook artifacts against mode-specific requirements:
+
+```bash
+# Validate an artifact
+./scripts/cook-validate cook/feature.cook.md
+
+# Verbose output (show all checks)
+./scripts/cook-validate cook/feature.cook.md --verbose
+
+# JSON output (for CI)
+./scripts/cook-validate cook/feature.cook.md --json
+```
+
+Checks include:
+- Required sections present (scope, pre-mortem, tests, etc.)
+- No TBD/TODO placeholders
+- Ownership assigned
+- Minimum test cases defined
+- Rollback plan documented
+
+Use `/cook-menu` for interactive artifact management (validate, compare, view status).
 
 ## License
 

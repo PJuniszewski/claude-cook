@@ -232,6 +232,10 @@
 <!-- Version history for this artifact. Append entries on significant updates. -->
 <!-- Format: YYYY-MM-DD: <summary of changes> -->
 
+## Changelog
+<!-- Version history for this artifact. Append entries on significant updates. -->
+<!-- Format: YYYY-MM-DD: <summary of changes> -->
+
 ---
 
 <!-- MICROWAVE MODE SECTIONS (remove above if microwave) -->
