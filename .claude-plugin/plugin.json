@@ -1,5 +1,4 @@
 {
-  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "juni",
   "version": "2.5.0",
   "description": "Juni Skills Suite - Feature development workflows and context safety tools.",
@@ -22,10 +21,5 @@
     "safety",
     "code-review",
     "inspection"
-  ],
-  "components": {
-    "commands": "../commands",
-    "skills": "../skills",
-    "chefs": "../chefs"
-  }
+  ]
 }
