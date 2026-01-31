@@ -283,18 +283,13 @@ def test_chef_file(filepath: Path) -> Tuple[str, List[str], List[str]]:
 
 
 def find_chef_files(base_path: Path) -> List[Path]:
-    """Find all chef files in chefs directories."""
+    """Find all chef files in agents directory."""
     files = []
 
-    # Check .claude/chefs/
-    claude_chefs = base_path / ".claude" / "chefs"
-    if claude_chefs.exists():
-        files.extend(claude_chefs.glob("*_chef.md"))
-
-    # Check chefs/ (root)
-    root_chefs = base_path / "chefs"
-    if root_chefs.exists():
-        files.extend(root_chefs.glob("*_chef.md"))
+    # Check .claude/agents/
+    agents_dir = base_path / ".claude" / "agents"
+    if agents_dir.exists():
+        files.extend(agents_dir.glob("*_chef.md"))
 
     return sorted(set(files))
 

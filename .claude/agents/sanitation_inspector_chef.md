@@ -1,6 +1,23 @@
 ---
 chef_id: sanitation_inspector_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - inspect
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - hygiene_report
+    - compliance_report
+    - safety_report
 
 traits:
   risk_posture: conservative
@@ -57,13 +74,13 @@ compatible_quests:
 
 tool_policy:
   forbidden:
-    - Auto-approve
-    - Code modification
-    - Bypassing violations
+    - auto_approve
+    - code_modification
+    - bypassing_violations
   allowed:
-    - Inspection
-    - Violation reporting
-    - Compliance verification
+    - inspection
+    - violation_reporting
+    - compliance_verification
 ---
 
 # Chef: Sanitation Inspector Chef

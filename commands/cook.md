@@ -184,7 +184,7 @@ Step 0.0 - Artifact Created
 |------|--------|-----------|
 | CLAUDE.md | _Pending_ | |
 | README.md | _Pending_ | |
-| .claude/chefs/*.md | _Pending_ | |
+| .claude/agents/*.md | _Pending_ | |
 
 ## Hard Rules (must not be violated)
 _Pending..._
@@ -435,16 +435,16 @@ This command uses a layered agent system:
 
 **Required for best results (mise en place):**
 - `CLAUDE.md` in project root - defines project rules and constraints
-- `<project>/.claude/chefs/` - project-specific review chefs
+- `<project>/.claude/agents/` - project-specific review chefs
 
 **System-wide fallbacks (always available):**
-- `~/.claude/chefs/engineer.md` - generic engineering chef
-- `~/.claude/chefs/product.md` - product scope review
-- `~/.claude/chefs/designer.md` - UX/flow review
-- `~/.claude/chefs/security.md` - security audit
-- `~/.claude/chefs/qa.md` - QA review
-- `~/.claude/chefs/architect.md` - architecture review
-- `~/.claude/chefs/docs.md` - documentation
+- `~/.claude/agents/engineer.md` - generic engineering chef
+- `~/.claude/agents/product.md` - product scope review
+- `~/.claude/agents/designer.md` - UX/flow review
+- `~/.claude/agents/security.md` - security audit
+- `~/.claude/agents/qa.md` - QA review
+- `~/.claude/agents/architect.md` - architecture review
+- `~/.claude/agents/docs.md` - documentation
 
 **Resolution order:** Project-specific agents override system-wide agents.
 

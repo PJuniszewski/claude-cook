@@ -1,6 +1,22 @@
 ---
 chef_id: product_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - scope
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - scope_definition
+    - user_value
 
 traits:
   risk_posture: conservative
@@ -51,12 +67,12 @@ skill_loadout:
 
 tool_policy:
   forbidden:
-    - Code generation
-    - Implementation decisions
+    - code_generation
+    - implementation_decisions
   allowed:
-    - Scope analysis
-    - Prioritization
-    - User value assessment
+    - scope_analysis
+    - prioritization
+    - user_value_assessment
 ---
 
 # Chef: Product Chef

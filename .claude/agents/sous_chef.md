@@ -1,6 +1,22 @@
 ---
 chef_id: sous_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - monitor
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - drift_report
+    - change_report
 
 traits:
   risk_posture: balanced
@@ -52,13 +68,13 @@ skill_loadout:
 
 tool_policy:
   forbidden:
-    - Auto-fix
-    - Direct blocking
-    - Code modification
+    - auto_fix
+    - direct_blocking
+    - code_modification
   allowed:
-    - Monitoring
-    - Reporting
-    - Analysis
+    - monitoring
+    - reporting
+    - analysis
 ---
 
 # Chef: Sous Chef

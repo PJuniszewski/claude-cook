@@ -1,6 +1,22 @@
 ---
 chef_id: ux_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - ux
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - user_flow
+    - accessibility_notes
 
 traits:
   risk_posture: balanced
@@ -52,12 +68,12 @@ skill_loadout:
 
 tool_policy:
   forbidden:
-    - Code implementation
-    - Architecture decisions
+    - code_implementation
+    - architecture_decisions
   allowed:
-    - Flow diagrams
-    - UI review
-    - Accessibility audit
+    - flow_diagrams
+    - ui_review
+    - accessibility_audit
 ---
 
 # Chef: UX Chef

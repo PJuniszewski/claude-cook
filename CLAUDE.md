@@ -34,9 +34,8 @@ docs/           # Additional documentation
 ```
 
 ### Naming
-- Chefs: `<role>_chef.md` (e.g., `engineer_chef.md`)
-- Agents use `juni:` prefix (e.g., `juni:engineer_chef`)
-- Artifacts: `<slug>.<date>.cook.md`
+- Chefs: `<role>_chef.md` in `.claude/agents/` (e.g., `engineer_chef.md`)
+- Orders: `<order_id>.order.md` in `orders/` (no dates in filename)
 - Templates: lowercase with hyphens
 
 ## Definition of Done (well-done)
@@ -54,17 +53,20 @@ See [COOK_CONTRACT.md](COOK_CONTRACT.md) for full contract.
 
 ## Chefs (Roles)
 
-| Chef | Responsibility | When Active |
-|------|----------------|-------------|
-| product_chef | Scope, value, priorities | Phase 2 (Scope) |
-| ux_chef | User flows, UI impact | Phase 3 (UX) |
-| engineer_chef | Implementation plan | Phase 4 (Cooking) |
-| architect_chef | System impact, alternatives | Phase 4 (Cooking) |
-| qa_chef | Test plan, edge cases | Phase 5 (QA) |
-| security_chef | Threat assessment | Phase 6 (Security) |
-| docs_chef | Documentation updates | Phase 7 (Docs) |
-| release_chef | Versioning, changelog | Post-cooking |
+| Chef | Responsibility | phase_affinity |
+|------|----------------|----------------|
+| product_chef | Scope, value, priorities | scope |
+| ux_chef | User flows, UI impact | ux |
+| architect_chef | System impact, alternatives | plan |
+| engineer_chef | Implementation plan | plan |
+| qa_chef | Test plan, edge cases | test |
+| security_chef | Threat assessment | security |
+| docs_chef | Documentation updates | docs |
+| release_chef | Versioning, changelog | release |
+| sanitation_inspector_chef | Post-implementation review | inspect |
+| sous_chef | Background monitoring | monitor |
 
+All chefs output reviews using `review_v1` format. See [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md).
 See [CHEF_MATRIX.md](CHEF_MATRIX.md) for inputs/outputs.
 
 ## Anti-patterns
@@ -91,6 +93,6 @@ Since Claude Code v2.1.16, `/juni:cook` uses the Tasks API for progress tracking
 |---------|----------|
 | "No CLAUDE.md found" | Create one or ignore (uses defaults) |
 | Output too verbose | Use `--microwave` for quick fixes |
-| Chef not activating | Check `.claude/chefs/` has the file |
+| Chef not activating | Check `.claude/agents/` has the file |
 | Stuck in Phase 0 | Provide more project context |
-| Artifact not created | Check `cook/` directory exists |
+| Order not created | Check `orders/` directory exists |
