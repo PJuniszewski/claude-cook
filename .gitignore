@@ -13,6 +13,9 @@ Thumbs.db
 # Local Claude settings (user-specific)
 .claude/settings.local.json
 
+# Local cook config (user-specific Jira settings, etc.)
+cook/config/
+
 # Generated artifacts (optional - uncomment to ignore)
 # cook/*.cook.md
 
