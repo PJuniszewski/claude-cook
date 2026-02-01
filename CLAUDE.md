@@ -12,7 +12,7 @@ Cook uses a **hybrid approach** combining narrative context with operational con
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ CLAUDE.md (Narrative Layer)                             │
+│ CLAUDE.md or AGENTS.md (Narrative Layer)                │
 │ "What we build, why, how we work"                       │
 │ → Global project context, loaded in Phase 0             │
 └─────────────────────────────────────────────────────────┘
@@ -26,11 +26,16 @@ Cook uses a **hybrid approach** combining narrative context with operational con
 └─────────────────────────────────────────────────────────┘
 ```
 
+**Narrative file resolution:**
+1. `CLAUDE.md` - Claude Code native format (preferred)
+2. `AGENTS.md` - Vercel/industry convention (supported)
+3. `README.md` - fallback if neither exists
+
 **Why two layers?**
 
 | Layer | Purpose | When Loaded |
 |-------|---------|-------------|
-| CLAUDE.md | Narrative context - goals, architecture, conventions | Once at start (Phase 0) |
+| CLAUDE.md / AGENTS.md | Narrative context - goals, architecture, conventions | Once at start (Phase 0) |
 | Chefs | Operational contracts - rules, escalations, outputs | Per-phase as needed |
 
 This combines the cognitive benefits of global context (like AGENTS.md) with the operational rigor of contractual skills.

@@ -181,7 +181,12 @@ Step 0.0 - Artifact Created
 
 **This phase loads the NARRATIVE LAYER - global project context.**
 
-Read CLAUDE.md FIRST. This is your "AGENTS.md" - it tells you:
+Load narrative context in this order (first found wins):
+1. `CLAUDE.md` - Claude Code native format
+2. `AGENTS.md` - Vercel/industry convention
+3. `README.md` - fallback if neither exists
+
+This tells you:
 - What the project does
 - How the team works
 - What patterns to follow
@@ -190,8 +195,9 @@ Read CLAUDE.md FIRST. This is your "AGENTS.md" - it tells you:
 ## Sources Scanned
 | File | Purpose | Status | Key Rules |
 |------|---------|--------|-----------|
-| CLAUDE.md | **Narrative context** (goals, architecture, conventions) | _Pending_ | |
-| README.md | Public documentation | _Pending_ | |
+| CLAUDE.md | **Narrative context** (primary) | _Pending_ | |
+| AGENTS.md | **Narrative context** (alternative) | _Pending_ | |
+| README.md | Public documentation (fallback) | _Pending_ | |
 | .claude/agents/*.md | Chef contracts (loaded per-phase, not here) | _Noted_ | |
 
 ## Hard Rules (must not be violated)
