@@ -26,10 +26,10 @@ Cook uses a **hybrid approach** combining narrative context with operational con
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Narrative file resolution:**
-1. `CLAUDE.md` - Claude Code native format (preferred)
-2. `AGENTS.md` - Vercel/industry convention (supported)
-3. `README.md` - fallback if neither exists
+**Narrative files (all loaded, priority on conflict):**
+1. `CLAUDE.md` - Claude Code native format (highest priority)
+2. `AGENTS.md` - Vercel/industry convention
+3. `README.md` - general project documentation (lowest priority)
 
 **Why two layers?**
 

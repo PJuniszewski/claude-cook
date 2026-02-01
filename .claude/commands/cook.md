@@ -181,10 +181,12 @@ Step 0.0 - Artifact Created
 
 **This phase loads the NARRATIVE LAYER - global project context.**
 
-Load narrative context in this order (first found wins):
-1. `CLAUDE.md` - Claude Code native format
-2. `AGENTS.md` - Vercel/industry convention
-3. `README.md` - fallback if neither exists
+Load ALL narrative files that exist (they complement each other):
+- `CLAUDE.md` - Claude Code native format (highest priority)
+- `AGENTS.md` - Vercel/industry convention
+- `README.md` - general project documentation
+
+**Priority on conflict:** CLAUDE.md > AGENTS.md > README.md
 
 This tells you:
 - What the project does
@@ -193,12 +195,12 @@ This tells you:
 - What to avoid
 
 ## Sources Scanned
-| File | Purpose | Status | Key Rules |
-|------|---------|--------|-----------|
-| CLAUDE.md | **Narrative context** (primary) | _Pending_ | |
-| AGENTS.md | **Narrative context** (alternative) | _Pending_ | |
-| README.md | Public documentation (fallback) | _Pending_ | |
-| .claude/agents/*.md | Chef contracts (loaded per-phase, not here) | _Noted_ | |
+| File | Purpose | Priority | Status | Key Rules |
+|------|---------|----------|--------|-----------|
+| CLAUDE.md | Claude-specific instructions | 1 (highest) | _Pending_ | |
+| AGENTS.md | Agent instructions | 2 | _Pending_ | |
+| README.md | General project docs | 3 (lowest) | _Pending_ | |
+| .claude/agents/*.md | Chef contracts (loaded per-phase) | N/A | _Noted_ | |
 
 ## Hard Rules (must not be violated)
 _Pending..._
