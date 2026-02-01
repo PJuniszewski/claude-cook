@@ -104,6 +104,12 @@ tool_policy:
     - inspection
     - violation_reporting
     - compliance_verification
+
+fallback_behavior:
+  on_insufficient_context: inspect_without_context
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: report_partial
+  max_clarification_rounds: 1
 ---
 
 # Chef: Sanitation Inspector Chef

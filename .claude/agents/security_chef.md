@@ -99,6 +99,12 @@ tool_policy:
     - vulnerability_analysis
     - threat_modeling
     - security_audit
+
+fallback_behavior:
+  on_insufficient_context: block
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: block
+  max_clarification_rounds: 1
 ---
 
 # Chef: Security Chef

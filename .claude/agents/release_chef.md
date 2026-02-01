@@ -99,6 +99,12 @@ tool_policy:
     - version_analysis
     - changelog_writing
     - tag_creation
+
+fallback_behavior:
+  on_insufficient_context: needs-clarification
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: block
+  max_clarification_rounds: 1
 ---
 
 # Chef: Release Chef

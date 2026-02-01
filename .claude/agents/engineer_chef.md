@@ -102,6 +102,12 @@ tool_policy:
     - implementation_design
     - test_planning
     - diagram_generation
+
+fallback_behavior:
+  on_insufficient_context: needs-clarification
+  on_conflicting_requirements: escalate_to_architect
+  on_timeout: proceed_with_warning
+  max_clarification_rounds: 2
 ---
 
 # Chef: Engineer Chef

@@ -94,6 +94,12 @@ tool_policy:
     - scope_analysis
     - prioritization
     - user_value_assessment
+
+fallback_behavior:
+  on_insufficient_context: needs-clarification
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: needs-clarification
+  max_clarification_rounds: 2
 ---
 
 # Chef: Product Chef

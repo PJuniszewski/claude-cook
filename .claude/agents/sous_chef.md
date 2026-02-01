@@ -95,6 +95,12 @@ tool_policy:
     - monitoring
     - reporting
     - analysis
+
+fallback_behavior:
+  on_insufficient_context: report_limited
+  on_conflicting_requirements: report_conflict
+  on_timeout: skip_analysis
+  max_clarification_rounds: 0
 ---
 
 # Chef: Sous Chef

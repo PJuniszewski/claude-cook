@@ -92,6 +92,12 @@ tool_policy:
     - documentation_planning
     - example_writing
     - changelog_updates
+
+fallback_behavior:
+  on_insufficient_context: needs-clarification
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: proceed_with_warning
+  max_clarification_rounds: 2
 ---
 
 # Chef: Docs Chef

@@ -6,23 +6,45 @@ This repo contains the **juni** plugin - a Claude Code plugin suite combining:
 - `/juni:cook` - Structured feature development workflows
 - `/juni:guard` - Epistemic safety for JSON data
 
-## Architecture: Two-Layer Context System
+## Architecture: Multi-Layer Context System
 
-Cook uses a **hybrid approach** combining narrative context with operational contracts:
+Cook uses a **layered approach** combining narrative context with operational contracts and explicit policies:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ CLAUDE.md or AGENTS.md (Narrative Layer)                │
+│ CLAUDE.md / AGENTS.md (Narrative Layer)                 │
 │ "What we build, why, how we work"                       │
 │ → Global project context, loaded in Phase 0             │
 └─────────────────────────────────────────────────────────┘
                          ↓
-              Phase 0: Load project context
+┌─────────────────────────────────────────────────────────┐
+│ ROUTER_POLICY.md (Router/Policy Layer)                  │
+│ "Who decides when"                                      │
+│ → Phase routing, escalation paths, conflict resolution  │
+└─────────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────┐
 │ .claude/agents/*_chef.md (Operational Layer)            │
 │ non_negotiables, escalation, rubric, output_contract    │
 │ → Per-phase contracts, loaded before each step          │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│ CHEF_CONTRACTS.md (Handoff Layer)                       │
+│ "What is passed to whom"                                │
+│ → Input/output contracts, handoff validation            │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│ FALLBACK_POLICY.md (Fallback Layer)                     │
+│ "What when we can't decide"                             │
+│ → Recovery paths, timeouts, degradation modes           │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│ .claude/data/cook-audit.jsonl (Audit/Memory Layer)      │
+│ "What did we learn"                                     │
+│ → Event logging, pattern analysis, improvements         │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -31,14 +53,18 @@ Cook uses a **hybrid approach** combining narrative context with operational con
 2. `AGENTS.md` - Vercel/industry convention
 3. `README.md` - general project documentation (lowest priority)
 
-**Why two layers?**
+**Architecture layers:**
 
-| Layer | Purpose | When Loaded |
-|-------|---------|-------------|
-| CLAUDE.md / AGENTS.md | Narrative context - goals, architecture, conventions | Once at start (Phase 0) |
-| Chefs | Operational contracts - rules, escalations, outputs | Per-phase as needed |
+| Layer | File | Purpose |
+|-------|------|---------|
+| Narrative | CLAUDE.md | Goals, conventions, context |
+| Router | ROUTER_POLICY.md | Phase→chef mapping, escalation |
+| Operational | .claude/agents/*.md | Per-chef rules and contracts |
+| Handoff | CHEF_CONTRACTS.md | What data passes between chefs |
+| Fallback | FALLBACK_POLICY.md | Recovery when things go wrong |
+| Audit | .claude/data/*.jsonl | Learning from past cooks |
 
-This combines the cognitive benefits of global context (like AGENTS.md) with the operational rigor of contractual skills.
+This combines global context with operational rigor and explicit failure handling.
 
 ## Quick Start
 
@@ -102,6 +128,7 @@ See [COOK_CONTRACT.md](COOK_CONTRACT.md) for full contract.
 
 All chefs output reviews using `review_v1` format. See [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md).
 See [CHEF_MATRIX.md](CHEF_MATRIX.md) for inputs/outputs.
+See [CHEF_CONTRACTS.md](CHEF_CONTRACTS.md) for handoff contracts between chefs.
 
 ## Anti-patterns
 
@@ -130,3 +157,17 @@ Since Claude Code v2.1.16, `/juni:cook` uses the Tasks API for progress tracking
 | Chef not activating | Check `.claude/agents/` has the file |
 | Stuck in Phase 0 | Provide more project context |
 | Order not created | Check `orders/` directory exists |
+| Chef can't decide | Check `FALLBACK_POLICY.md` for recovery |
+| Handoff validation fails | Check `CHEF_CONTRACTS.md` for requirements |
+| Escalation unclear | Check `ROUTER_POLICY.md` for routing |
+
+## Key Contract Files
+
+| File | Purpose |
+|------|---------|
+| [ROUTER_POLICY.md](ROUTER_POLICY.md) | Phase→chef routing, escalation priority |
+| [CHEF_CONTRACTS.md](CHEF_CONTRACTS.md) | Chef-to-chef handoff contracts |
+| [FALLBACK_POLICY.md](FALLBACK_POLICY.md) | Recovery paths for failures |
+| [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md) | Standard review output format |
+| [COOK_CONTRACT.md](COOK_CONTRACT.md) | Artifact structure |
+| [CHEF_MATRIX.md](CHEF_MATRIX.md) | Chef responsibilities matrix |

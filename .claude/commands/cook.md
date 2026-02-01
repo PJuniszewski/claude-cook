@@ -543,6 +543,42 @@ If Tasks API is unavailable (older Claude Code or `CLAUDE_CODE_ENABLE_TASKS=fals
 
 ---
 
+## Fallback Handling
+
+When things go wrong, consult `FALLBACK_POLICY.md` for recovery paths.
+
+### Chef Loading Fallback
+
+If chef loading fails:
+1. Try resolution order: `.claude/agents/` → `~/.claude/agents/` → fuzzy match
+2. If no chef found → use default contract (no blocking verdicts allowed)
+3. Always escalate to human if in doubt
+
+### Verdict Fallback
+
+If verdict is `needs-clarification`:
+1. Allow max 2 clarification rounds
+2. Request additional context between attempts
+3. If still unclear after 2 attempts → escalate to human
+4. Log all attempts to audit trail
+
+### Escalation Fallback
+
+If escalation target unavailable:
+1. Check alternative routing in FALLBACK_POLICY.md
+2. Security escalations → always to human (never skip)
+3. Other unavailable → try alternative or human
+
+### Contract Validation Fallback
+
+If handoff validation fails:
+1. Missing required field → return to previous chef (max 2 retries)
+2. Invalid format → request correction (max 1 retry)
+3. Optional field missing → proceed with warning
+4. Repeated failures → suggest contract review
+
+---
+
 ## Audit Logging
 
 Cook maintains an audit trail for cross-order learning and pattern detection.
