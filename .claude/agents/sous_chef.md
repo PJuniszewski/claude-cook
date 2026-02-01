@@ -5,6 +5,14 @@ version: 2.0.0
 phase_affinity:
   - monitor
 
+input_contract:
+  requires_from: null
+  required_fields: []
+  optional_fields:
+    - cook_artifact
+    - recent_commits
+    - incident_reports
+
 output_contract:
   format: review_v1
   required_sections:
@@ -17,6 +25,11 @@ output_contract:
   optional_addenda:
     - drift_report
     - change_report
+  handoff_to: null
+  handoff_fields:
+    - monitoring_report
+    - drift_analysis
+    - suggestions
 
 traits:
   risk_posture: balanced

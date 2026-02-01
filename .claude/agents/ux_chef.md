@@ -5,6 +5,14 @@ version: 2.0.0
 phase_affinity:
   - ux
 
+input_contract:
+  requires_from: product_chef
+  required_fields:
+    - approved_scope
+  optional_fields:
+    - user_value_statement
+    - non_goals
+
 output_contract:
   format: review_v1
   required_sections:
@@ -17,6 +25,11 @@ output_contract:
   optional_addenda:
     - user_flow
     - accessibility_notes
+  handoff_to: architect_chef
+  handoff_fields:
+    - ux_requirements
+    - user_flow
+    - accessibility_concerns
 
 traits:
   risk_posture: balanced

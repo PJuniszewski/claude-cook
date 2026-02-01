@@ -5,6 +5,14 @@ version: 2.0.0
 phase_affinity:
   - docs
 
+input_contract:
+  requires_from: security_chef
+  required_fields:
+    - security_status
+  optional_fields:
+    - security_notes
+    - threat_assessment
+
 output_contract:
   format: review_v1
   required_sections:
@@ -17,6 +25,10 @@ output_contract:
   optional_addenda:
     - files_to_update
     - migration_guide
+  handoff_to: release_chef
+  handoff_fields:
+    - documentation_status
+    - breaking_changes_documented
 
 traits:
   risk_posture: balanced

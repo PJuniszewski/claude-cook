@@ -5,6 +5,14 @@ version: 2.0.0
 phase_affinity:
   - release
 
+input_contract:
+  requires_from: docs_chef
+  required_fields:
+    - documentation_status
+  optional_fields:
+    - breaking_changes_documented
+    - migration_guide
+
 output_contract:
   format: review_v1
   required_sections:
@@ -17,6 +25,11 @@ output_contract:
   optional_addenda:
     - version_bump
     - changelog_entry
+  handoff_to: null
+  handoff_fields:
+    - version_bump
+    - changelog_entry
+    - release_checklist
 
 traits:
   risk_posture: conservative

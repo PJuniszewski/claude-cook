@@ -5,6 +5,14 @@ version: 2.0.0
 phase_affinity:
   - scope
 
+input_contract:
+  requires_from: user_request
+  required_fields:
+    - feature_description
+  optional_fields:
+    - context
+    - constraints
+
 output_contract:
   format: review_v1
   required_sections:
@@ -17,6 +25,12 @@ output_contract:
   optional_addenda:
     - scope_definition
     - user_value
+  handoff_to: architect_chef
+  handoff_fields:
+    - approved_scope
+    - non_goals
+    - success_metrics
+    - priority
 
 traits:
   risk_posture: conservative

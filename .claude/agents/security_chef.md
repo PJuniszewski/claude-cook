@@ -5,6 +5,14 @@ version: 2.0.0
 phase_affinity:
   - security
 
+input_contract:
+  requires_from: qa_chef
+  required_fields:
+    - test_cases
+  optional_fields:
+    - coverage_areas
+    - uncovered_risks
+
 output_contract:
   format: review_v1
   required_sections:
@@ -17,6 +25,10 @@ output_contract:
   optional_addenda:
     - threat_assessment
     - owasp_checklist
+  handoff_to: docs_chef
+  handoff_fields:
+    - security_status
+    - security_notes
 
 traits:
   risk_posture: conservative

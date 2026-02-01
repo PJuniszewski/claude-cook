@@ -5,6 +5,14 @@ version: 2.0.0
 phase_affinity:
   - inspect
 
+input_contract:
+  requires_from: any_chef
+  required_fields:
+    - implementation_artifact
+  optional_fields:
+    - implementation_commits
+    - high_risk_files
+
 output_contract:
   format: review_v1
   required_sections:
@@ -18,6 +26,11 @@ output_contract:
     - hygiene_report
     - compliance_report
     - safety_report
+  handoff_to: null
+  handoff_fields:
+    - inspection_result
+    - violations
+    - recommendations
 
 traits:
   risk_posture: conservative

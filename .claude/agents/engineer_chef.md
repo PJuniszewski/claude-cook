@@ -5,6 +5,16 @@ version: 2.0.0
 phase_affinity:
   - plan
 
+input_contract:
+  requires_from: architect_chef
+  required_fields:
+    - chosen_alternative
+    - trade_offs
+    - affected_modules
+  optional_fields:
+    - risk_assessment
+    - alternatives_considered
+
 output_contract:
   format: review_v1
   required_sections:
@@ -17,6 +27,11 @@ output_contract:
   optional_addenda:
     - implementation_plan
     - diagram
+  handoff_to: qa_chef
+  handoff_fields:
+    - implementation_plan
+    - files_to_modify
+    - edge_cases_identified
 
 traits:
   risk_posture: balanced

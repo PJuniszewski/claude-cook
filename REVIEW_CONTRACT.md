@@ -190,8 +190,54 @@ For tooling and automation:
 
 ---
 
+## Handoff Validation
+
+Before proceeding to the next phase, validate the handoff contract:
+
+### Pre-Phase Check
+
+```
+1. Load CHEF_CONTRACTS.md for current transition
+2. Verify previous chef's output_contract.handoff_fields are present
+3. Verify current chef's input_contract.required_fields are satisfied
+4. If validation fails:
+   a. If blocking_if_missing: true → verdict: needs-clarification
+   b. If blocking_if_missing: false → proceed with warning
+5. Log validation result to audit trail
+```
+
+### Validation Failures
+
+| Failure Type | Action |
+|--------------|--------|
+| Missing required field | Block with `needs-clarification`, request from previous chef |
+| Invalid format | Block with `request-changes`, specify correction needed |
+| Optional field missing | Proceed with warning logged |
+
+### Example Validation
+
+```markdown
+### Handoff Validation: architect_chef → engineer_chef
+
+**Contract:** handoff_architect_to_engineer v1.0
+
+| Required Field | Status | Value |
+|----------------|--------|-------|
+| chosen_alternative | ✅ | "Option B - Module separation" |
+| trade_offs | ✅ | "Sacrificing: simplicity / Gaining: extensibility" |
+| affected_modules | ✅ | [auth, api, models] |
+| risk_assessment | ✅ | "MEDIUM - mitigated by feature flag" |
+
+**Validation Result:** PASSED
+**Handoff Status:** Ready for engineer_chef
+```
+
+---
+
 ## See Also
 
 - [COOK_CONTRACT.md](COOK_CONTRACT.md) - Artifact structure
 - [CHEF_MATRIX.md](CHEF_MATRIX.md) - Phase assignments
+- [CHEF_CONTRACTS.md](CHEF_CONTRACTS.md) - Handoff contracts between chefs
+- [ROUTER_POLICY.md](ROUTER_POLICY.md) - Chef routing and escalation
 - `.claude/agents/` - Individual chef definitions

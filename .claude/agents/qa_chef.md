@@ -5,6 +5,15 @@ version: 2.0.0
 phase_affinity:
   - test
 
+input_contract:
+  requires_from: engineer_chef
+  required_fields:
+    - implementation_plan
+    - files_to_modify
+  optional_fields:
+    - edge_cases_identified
+    - high_risk_areas
+
 output_contract:
   format: review_v1
   required_sections:
@@ -18,6 +27,11 @@ output_contract:
     - test_cases
     - edge_cases
     - acceptance_criteria
+  handoff_to: security_chef
+  handoff_fields:
+    - test_cases
+    - coverage_areas
+    - uncovered_risks
 
 traits:
   risk_posture: conservative

@@ -5,6 +5,16 @@ version: 2.0.0
 phase_affinity:
   - plan
 
+input_contract:
+  requires_from: product_chef
+  required_fields:
+    - approved_scope
+    - non_goals
+    - success_metrics
+  optional_fields:
+    - priority
+    - user_value_statement
+
 output_contract:
   format: review_v1
   required_sections:
@@ -17,6 +27,12 @@ output_contract:
   optional_addenda:
     - alternatives_considered
     - trade_offs
+  handoff_to: engineer_chef
+  handoff_fields:
+    - chosen_alternative
+    - trade_offs
+    - affected_modules
+    - risk_assessment
 
 traits:
   risk_posture: balanced
