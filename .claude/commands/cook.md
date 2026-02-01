@@ -543,6 +543,59 @@ If Tasks API is unavailable (older Claude Code or `CLAUDE_CODE_ENABLE_TASKS=fals
 
 ---
 
+## Audit Logging
+
+Cook maintains an audit trail for cross-order learning and pattern detection.
+
+### Log Location
+
+Audit logs are stored in `.claude/data/cook-audit.jsonl` (JSON Lines format).
+
+### Events Logged
+
+After each phase completion:
+1. Log event to `.claude/data/cook-audit.jsonl`
+2. Include: order_id, phase, chef_id, verdict, duration
+3. Log any escalations that occurred
+4. Log any blockers identified
+
+### Event Types
+
+| Event | When Logged |
+|-------|-------------|
+| `phase_start` | Chef begins processing |
+| `phase_complete` | Chef finishes with verdict |
+| `escalation` | Chef escalates to another chef |
+| `blocker` | Blocking issue identified |
+| `handoff` | Data passed between chefs |
+| `validation_failure` | Contract validation failed |
+| `human_intervention` | Human input required |
+| `cook_complete` | Entire cook workflow done |
+
+### Pattern Analysis
+
+After cook completion:
+1. If >5 orders exist in audit log, run pattern analysis
+2. Surface recurring blockers in final summary
+3. Track escalation patterns for process improvement
+
+### Example Log Entry
+
+```json
+{
+  "timestamp": "2026-01-31T10:30:00Z",
+  "order_id": "add-auth.2026-01-31",
+  "event_type": "phase_complete",
+  "phase": "security",
+  "chef_id": "security_chef",
+  "verdict": "request-changes",
+  "blockers": [{"type": "missing_validation", "severity": "MEDIUM"}],
+  "duration_seconds": 45
+}
+```
+
+---
+
 ## Failure Modes
 
 Claude Code MUST STOP cooking if:
