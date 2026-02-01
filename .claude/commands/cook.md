@@ -387,16 +387,24 @@ Only AFTER artifact exists:
 
 #### Chef Loading (MANDATORY)
 
-Before executing each step, **READ the corresponding chef file** to load its rules into context:
+Before executing each step, **load the corresponding chef** following resolution order:
 
-| Step | Chef to Load | Command |
-|------|--------------|---------|
-| Step 2 (Product) | product_chef | `Read(.claude/agents/product_chef.md)` |
-| Step 3 (UX) | ux_chef | `Read(.claude/agents/ux_chef.md)` |
-| Step 4 (Plan) | architect_chef + engineer_chef | `Read(.claude/agents/architect_chef.md)` then `Read(.claude/agents/engineer_chef.md)` |
-| Step 5 (QA) | qa_chef | `Read(.claude/agents/qa_chef.md)` |
-| Step 6 (Security) | security_chef | `Read(.claude/agents/security_chef.md)` |
-| Step 7 (Docs) | docs_chef | `Read(.claude/agents/docs_chef.md)` |
+| Step | Chef Role | Resolution Order |
+|------|-----------|------------------|
+| Step 2 (Product) | product_chef | 1. `.claude/agents/product_chef.md` 2. `~/.claude/agents/product_chef.md` |
+| Step 3 (UX) | ux_chef | 1. `.claude/agents/ux_chef.md` 2. `~/.claude/agents/ux_chef.md` |
+| Step 4 (Plan) | architect_chef, engineer_chef | Load both in order |
+| Step 5 (QA) | qa_chef | 1. `.claude/agents/qa_chef.md` 2. `~/.claude/agents/qa_chef.md` |
+| Step 6 (Security) | security_chef | 1. `.claude/agents/security_chef.md` 2. `~/.claude/agents/security_chef.md` |
+| Step 7 (Docs) | docs_chef | 1. `.claude/agents/docs_chef.md` 2. `~/.claude/agents/docs_chef.md` |
+
+**Resolution algorithm:**
+```
+1. Try: Glob(".claude/agents/<role>_chef.md")
+2. If not found, try: Glob("~/.claude/agents/<role>_chef.md")
+3. If not found, try: Glob(".claude/agents/*<role>*.md") # custom naming
+4. If still not found: proceed without chef (warn in artifact)
+```
 
 **Why this matters:** Chef files contain `non_negotiables`, `rubric`, and `output_contract` that MUST be applied. Without reading them, you're cooking blind.
 
