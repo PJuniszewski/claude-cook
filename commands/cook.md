@@ -179,12 +179,20 @@ Step 0.0 - Artifact Created
 
 # Phase 0 - Project Policy & Context
 
+**This phase loads the NARRATIVE LAYER - global project context.**
+
+Read CLAUDE.md FIRST. This is your "AGENTS.md" - it tells you:
+- What the project does
+- How the team works
+- What patterns to follow
+- What to avoid
+
 ## Sources Scanned
-| File | Status | Key Rules |
-|------|--------|-----------|
-| CLAUDE.md | _Pending_ | |
-| README.md | _Pending_ | |
-| .claude/agents/*.md | _Pending_ | |
+| File | Purpose | Status | Key Rules |
+|------|---------|--------|-----------|
+| CLAUDE.md | **Narrative context** (goals, architecture, conventions) | _Pending_ | |
+| README.md | Public documentation | _Pending_ | |
+| .claude/agents/*.md | Chef contracts (loaded per-phase, not here) | _Noted_ | |
 
 ## Hard Rules (must not be violated)
 _Pending..._
@@ -385,7 +393,9 @@ Only AFTER artifact exists:
 3. Update artifact after EACH phase
 4. Clearly label each cooking phase in output
 
-#### Chef Loading (MANDATORY)
+#### Chef Loading (MANDATORY) - Operational Layer
+
+**Phase 0 loaded the narrative (CLAUDE.md). Now load operational contracts (chefs).**
 
 Before executing each step, **load the corresponding chef** following resolution order:
 

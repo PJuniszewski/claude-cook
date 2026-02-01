@@ -6,6 +6,35 @@ This repo contains the **juni** plugin - a Claude Code plugin suite combining:
 - `/juni:cook` - Structured feature development workflows
 - `/juni:guard` - Epistemic safety for JSON data
 
+## Architecture: Two-Layer Context System
+
+Cook uses a **hybrid approach** combining narrative context with operational contracts:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ CLAUDE.md (Narrative Layer)                             │
+│ "What we build, why, how we work"                       │
+│ → Global project context, loaded in Phase 0             │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+              Phase 0: Load project context
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│ .claude/agents/*_chef.md (Operational Layer)            │
+│ non_negotiables, escalation, rubric, output_contract    │
+│ → Per-phase contracts, loaded before each step          │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Why two layers?**
+
+| Layer | Purpose | When Loaded |
+|-------|---------|-------------|
+| CLAUDE.md | Narrative context - goals, architecture, conventions | Once at start (Phase 0) |
+| Chefs | Operational contracts - rules, escalations, outputs | Per-phase as needed |
+
+This combines the cognitive benefits of global context (like AGENTS.md) with the operational rigor of contractual skills.
+
 ## Quick Start
 
 ```bash
