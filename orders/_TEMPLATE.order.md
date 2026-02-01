@@ -1,56 +1,21 @@
 ---
-# =============================================================================
-# ORDER METADATA
-# =============================================================================
-
-# REQUIRED
 order_id: "REPLACE_WITH_GENERATED_ID"
 title: "REPLACE_WITH_TITLE"
-status: "raw"                          # raw | cooking | blocked | ready-for-merge | plated
+status: "raw"
 created_at: "REPLACE_WITH_TIMESTAMP"
-created_by: "REPLACE_WITH_USER"
 
-# PRIMARY CHEF (who's cooking this order)
-chef_id: ""                            # e.g., "engineer_chef"
-recipe_id: ""                          # optional, if using recipes
+owner: ""
+priority: "medium"
+labels: []
+due_date: ""
 
-# FLAGS - trigger conditional rules in chef-mapping.yaml
-# Common flags: auth, payments, pii, crypto, ui, ux, prod, outage
 flags: []
 
-# =============================================================================
-# TRACKER INTEGRATION (OPTIONAL)
-# =============================================================================
-# Populated by `cook jira fetch` or manual entry
-# tracker.snapshot is AUTO-UPDATED ONLY - never manually edit
-
-# tracker:
-#   type: "jira"                       # jira | github | linear
-#   key: "PROJ-123"
-#   url: "https://jira.example.com/browse/PROJ-123"
-#   fetched_at: "2026-01-30T12:00:00Z"
-#   snapshot:                          # AUTO-UPDATED by tracker sync
-#     title: ""
-#     issue_type: ""                   # Bug, Story, Task, Incident, etc.
-#     priority: ""
-#     labels: []
-#     components: []
-
-# =============================================================================
-# COOK ARTIFACT LINK
-# =============================================================================
-
-# cook_artifact: "cook/<slug>.<date>.cook.md"
-# cook_status: ""                      # well-done | needs-more-cooking | etc.
-
-# =============================================================================
-# LOCAL METADATA
-# =============================================================================
-
-priority: "medium"                     # low | medium | high
-labels: []
-assignee: ""
-due_date: ""
+tracker:
+  type: ""
+  key: ""
+  url: ""
+  fetched_at: ""
 ---
 
 # Order: REPLACE_WITH_TITLE
@@ -78,14 +43,34 @@ due_date: ""
 
 
 ## Reviews
-<!-- Chef reviews appended here by /juni:cook -->
-<!-- Format:
-### <chef_id> (<date>)
-- verdict: approve|block|request-changes|clarify
-- must_fix: [...]
-- risks: [...]
-- next_step: ...
+<!-- Chef reviews in review_v1 format. See REVIEW_CONTRACT.md -->
+<!-- Example:
+### architect_chef (2026-01-31)
+
+**verdict:** approve
+**must_fix:** (none)
+**should_fix:**
+- Consider caching
+**questions:** (none)
+**risks:**
+- [LOW] Minor latency increase
+**next_step:** proceed to engineer_chef
 -->
+
+
+---
+## Audit Trail
+<!-- Auto-populated during cook execution -->
+
+| Timestamp | Phase | Chef | Verdict | Duration | Notes |
+|-----------|-------|------|---------|----------|-------|
+| | | | | | |
+
+### Escalations
+<!-- Record any escalations that occurred -->
+
+### Blockers Encountered
+<!-- Record blockers and their resolution -->
 
 
 ---
@@ -95,5 +80,4 @@ due_date: ""
 
 ---
 ## Related
-<!-- Links to artifacts, PRs, related orders -->
-
+<!-- Links to PRs, docs, related orders -->

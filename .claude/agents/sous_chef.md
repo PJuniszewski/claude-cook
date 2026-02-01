@@ -1,6 +1,35 @@
 ---
 chef_id: sous_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - monitor
+
+input_contract:
+  requires_from: null
+  required_fields: []
+  optional_fields:
+    - cook_artifact
+    - recent_commits
+    - incident_reports
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - drift_report
+    - change_report
+  handoff_to: null
+  handoff_fields:
+    - monitoring_report
+    - drift_analysis
+    - suggestions
 
 traits:
   risk_posture: balanced
@@ -33,6 +62,13 @@ escalation:
     - Repeated violations in same area
     - Pattern of uncooked changes detected
     - Post-mortem reveals systemic issue
+  escalates_to:
+    - condition: uncooked_sensitive_change
+      target: product_chef
+      reason: "Sensitive change without cook artifact needs review"
+    - condition: repeated_violations
+      target: product_chef
+      reason: "Pattern of violations indicates process issue"
 
 rubric:
   ready_for_merge:
@@ -52,13 +88,19 @@ skill_loadout:
 
 tool_policy:
   forbidden:
-    - Auto-fix
-    - Direct blocking
-    - Code modification
+    - auto_fix
+    - direct_blocking
+    - code_modification
   allowed:
-    - Monitoring
-    - Reporting
-    - Analysis
+    - monitoring
+    - reporting
+    - analysis
+
+fallback_behavior:
+  on_insufficient_context: report_limited
+  on_conflicting_requirements: report_conflict
+  on_timeout: skip_analysis
+  max_clarification_rounds: 0
 ---
 
 # Chef: Sous Chef

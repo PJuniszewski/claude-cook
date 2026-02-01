@@ -1,6 +1,35 @@
 ---
 chef_id: release_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - release
+
+input_contract:
+  requires_from: docs_chef
+  required_fields:
+    - documentation_status
+  optional_fields:
+    - breaking_changes_documented
+    - migration_guide
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - version_bump
+    - changelog_entry
+  handoff_to: null
+  handoff_fields:
+    - version_bump
+    - changelog_entry
+    - release_checklist
 
 traits:
   risk_posture: conservative
@@ -34,6 +63,16 @@ escalation:
     - Breaking change not explicitly approved
     - Version bump type unclear
     - Release blocked by test failures
+  escalates_to:
+    - condition: version_conflict
+      target: product_chef
+      reason: "Release versioning conflict needs resolution"
+    - condition: breaking_change_not_approved
+      target: product_chef
+      reason: "Breaking change needs explicit approval"
+    - condition: security_release
+      target: security_chef
+      reason: "Security release needs security sign-off"
 
 rubric:
   ready_for_merge:
@@ -54,12 +93,18 @@ skill_loadout:
 
 tool_policy:
   forbidden:
-    - Code changes
-    - Feature implementation
+    - code_changes
+    - feature_implementation
   allowed:
-    - Version analysis
-    - Changelog writing
-    - Tag creation
+    - version_analysis
+    - changelog_writing
+    - tag_creation
+
+fallback_behavior:
+  on_insufficient_context: needs-clarification
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: block
+  max_clarification_rounds: 1
 ---
 
 # Chef: Release Chef

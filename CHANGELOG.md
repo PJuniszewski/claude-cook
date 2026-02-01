@@ -4,7 +4,45 @@ All notable changes to claude-cook will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-<<<<<<< HEAD
+## [3.1.0] - 2026-02-01
+
+### Added
+- **Router/Policy Layer** (`ROUTER_POLICY.md`): Machine-parseable routing rules
+  - Phase → chef mapping with explicit execution order
+  - Escalation priority (security > product > architect > ...)
+  - Conflict resolution algorithm
+  - Phase skip rules (e.g., skip UX for CLI-only changes)
+  - Microwave mode routing with auto-escalation triggers
+- **Chef-to-Chef Contracts** (`CHEF_CONTRACTS.md`): Explicit handoff requirements
+  - Input/output contracts for all 10 chefs
+  - Handoff validation between phases
+  - Blocking vs non-blocking field requirements
+- **Audit/Memory System**: Cross-order learning
+  - `.claude/data/cook-audit.schema.json` - event schema
+  - `scripts/lib/auditLogger.js` - event logging utilities
+  - `scripts/lib/patternMiner.js` - pattern analysis (blockers, escalations, suggestions)
+  - Audit Trail section in order template
+- **Fallback Policies** (`FALLBACK_POLICY.md`): Recovery paths for failures
+  - Chef loading fallback with resolution order
+  - Verdict fallback with clarification loops
+  - Escalation fallback (security always to human)
+  - Contract validation fallback
+  - Graceful degradation modes
+
+### Changed
+- All 10 chefs now have `escalates_to`, `input_contract`, `output_contract`, `fallback_behavior`
+- CLAUDE.md updated with 6-layer architecture diagram
+- cook.md updated with Router Policy, Fallback Handling, and Audit Logging sections
+- REVIEW_CONTRACT.md extended with Handoff Validation section
+
+## [3.0.0] - 2026-01-31
+
+### Changed
+- **Unified chef/order contracts** with review_v1 format
+- Two-layer architecture (narrative + operational)
+- Support for AGENTS.md as alternative to CLAUDE.md
+- Dynamic chef resolution for custom project locations
+
 ## [2.2.0] - 2026-01-29
 
 ### Added

@@ -69,6 +69,33 @@ Optional flags:
 
 ---
 
+## Router Policy
+
+Before executing any step, consult `ROUTER_POLICY.md` for:
+
+1. **Which chef(s) to invoke** - `phase_routing` maps phases to chefs
+2. **Escalation routes** - When a chef signals escalation, follow defined paths
+3. **Conflict resolution** - If multiple chefs disagree, apply priority rules
+4. **Phase skip rules** - Determine if phase can be skipped (e.g., no UX changes)
+
+### Router Algorithm
+
+```
+For each cooking phase:
+1. Load ROUTER_POLICY.md phase_routing for current phase
+2. For each chef in phase:
+   a. Load chef contract from .claude/agents/
+   b. Execute chef review
+   c. Check for escalation triggers in chef output
+   d. If escalation needed → route to target chef
+3. Collect all verdicts
+4. Apply conflict resolution if multiple verdicts
+5. Record final verdict in artifact
+6. Proceed or block based on verdict
+```
+
+---
+
 ## Cooking Modes
 
 ### --well-done (default)
@@ -179,12 +206,28 @@ Step 0.0 - Artifact Created
 
 # Phase 0 - Project Policy & Context
 
+**This phase loads the NARRATIVE LAYER - global project context.**
+
+Load ALL narrative files that exist (they complement each other):
+- `CLAUDE.md` - Claude Code native format (highest priority)
+- `AGENTS.md` - Vercel/industry convention
+- `README.md` - general project documentation
+
+**Priority on conflict:** CLAUDE.md > AGENTS.md > README.md
+
+This tells you:
+- What the project does
+- How the team works
+- What patterns to follow
+- What to avoid
+
 ## Sources Scanned
-| File | Status | Key Rules |
-|------|--------|-----------|
-| CLAUDE.md | _Pending_ | |
-| README.md | _Pending_ | |
-| .claude/chefs/*.md | _Pending_ | |
+| File | Purpose | Priority | Status | Key Rules |
+|------|---------|----------|--------|-----------|
+| CLAUDE.md | Claude-specific instructions | 1 (highest) | _Pending_ | |
+| AGENTS.md | Agent instructions | 2 | _Pending_ | |
+| README.md | General project docs | 3 (lowest) | _Pending_ | |
+| .claude/agents/*.md | Chef contracts (loaded per-phase) | N/A | _Noted_ | |
 
 ## Hard Rules (must not be violated)
 _Pending..._
@@ -381,8 +424,39 @@ _Pending..._
 
 Only AFTER artifact exists:
 1. Run each cooking phase
-2. Update artifact after EACH phase
-3. Clearly label each cooking phase in output
+2. **CRITICAL: Read the chef file BEFORE each phase** (see Chef Loading below)
+3. Update artifact after EACH phase
+4. Clearly label each cooking phase in output
+
+#### Chef Loading (MANDATORY) - Operational Layer
+
+**Phase 0 loaded the narrative (CLAUDE.md). Now load operational contracts (chefs).**
+
+Before executing each step, **load the corresponding chef** following resolution order:
+
+| Step | Chef Role | Resolution Order |
+|------|-----------|------------------|
+| Step 2 (Product) | product_chef | 1. `.claude/agents/product_chef.md` 2. `~/.claude/agents/product_chef.md` |
+| Step 3 (UX) | ux_chef | 1. `.claude/agents/ux_chef.md` 2. `~/.claude/agents/ux_chef.md` |
+| Step 4 (Plan) | architect_chef, engineer_chef | Load both in order |
+| Step 5 (QA) | qa_chef | 1. `.claude/agents/qa_chef.md` 2. `~/.claude/agents/qa_chef.md` |
+| Step 6 (Security) | security_chef | 1. `.claude/agents/security_chef.md` 2. `~/.claude/agents/security_chef.md` |
+| Step 7 (Docs) | docs_chef | 1. `.claude/agents/docs_chef.md` 2. `~/.claude/agents/docs_chef.md` |
+
+**Resolution algorithm:**
+```
+1. Try: Glob(".claude/agents/<role>_chef.md")
+2. If not found, try: Glob("~/.claude/agents/<role>_chef.md")
+3. If not found, try: Glob(".claude/agents/*<role>*.md") # custom naming
+4. If still not found: proceed without chef (warn in artifact)
+```
+
+**Why this matters:** Chef files contain `non_negotiables`, `rubric`, and `output_contract` that MUST be applied. Without reading them, you're cooking blind.
+
+After reading, apply:
+- `non_negotiables` - rules that cannot be violated
+- `rubric.ready_for_merge` - checklist that must pass
+- `output_contract` - review format (review_v1)
 
 ### Step 3: Finalize
 
@@ -469,6 +543,95 @@ If Tasks API is unavailable (older Claude Code or `CLAUDE_CODE_ENABLE_TASKS=fals
 
 ---
 
+## Fallback Handling
+
+When things go wrong, consult `FALLBACK_POLICY.md` for recovery paths.
+
+### Chef Loading Fallback
+
+If chef loading fails:
+1. Try resolution order: `.claude/agents/` → `~/.claude/agents/` → fuzzy match
+2. If no chef found → use default contract (no blocking verdicts allowed)
+3. Always escalate to human if in doubt
+
+### Verdict Fallback
+
+If verdict is `needs-clarification`:
+1. Allow max 2 clarification rounds
+2. Request additional context between attempts
+3. If still unclear after 2 attempts → escalate to human
+4. Log all attempts to audit trail
+
+### Escalation Fallback
+
+If escalation target unavailable:
+1. Check alternative routing in FALLBACK_POLICY.md
+2. Security escalations → always to human (never skip)
+3. Other unavailable → try alternative or human
+
+### Contract Validation Fallback
+
+If handoff validation fails:
+1. Missing required field → return to previous chef (max 2 retries)
+2. Invalid format → request correction (max 1 retry)
+3. Optional field missing → proceed with warning
+4. Repeated failures → suggest contract review
+
+---
+
+## Audit Logging
+
+Cook maintains an audit trail for cross-order learning and pattern detection.
+
+### Log Location
+
+Audit logs are stored in `.claude/data/cook-audit.jsonl` (JSON Lines format).
+
+### Events Logged
+
+After each phase completion:
+1. Log event to `.claude/data/cook-audit.jsonl`
+2. Include: order_id, phase, chef_id, verdict, duration
+3. Log any escalations that occurred
+4. Log any blockers identified
+
+### Event Types
+
+| Event | When Logged |
+|-------|-------------|
+| `phase_start` | Chef begins processing |
+| `phase_complete` | Chef finishes with verdict |
+| `escalation` | Chef escalates to another chef |
+| `blocker` | Blocking issue identified |
+| `handoff` | Data passed between chefs |
+| `validation_failure` | Contract validation failed |
+| `human_intervention` | Human input required |
+| `cook_complete` | Entire cook workflow done |
+
+### Pattern Analysis
+
+After cook completion:
+1. If >5 orders exist in audit log, run pattern analysis
+2. Surface recurring blockers in final summary
+3. Track escalation patterns for process improvement
+
+### Example Log Entry
+
+```json
+{
+  "timestamp": "2026-01-31T10:30:00Z",
+  "order_id": "add-auth.2026-01-31",
+  "event_type": "phase_complete",
+  "phase": "security",
+  "chef_id": "security_chef",
+  "verdict": "request-changes",
+  "blockers": [{"type": "missing_validation", "severity": "MEDIUM"}],
+  "duration_seconds": 45
+}
+```
+
+---
+
 ## Failure Modes
 
 Claude Code MUST STOP cooking if:
@@ -499,16 +662,16 @@ This command uses a layered agent system:
 
 **Required for best results (mise en place):**
 - `CLAUDE.md` in project root - defines project rules and constraints
-- `<project>/.claude/chefs/` - project-specific review agents
+- `<project>/.claude/agents/` - project-specific review agents
 
 **System-wide fallbacks (always available):**
-- `~/.claude/chefs/engineer.md` - generic engineering agent
-- `~/.claude/chefs/product.md` - product scope review
-- `~/.claude/chefs/designer.md` - UX/flow review
-- `~/.claude/chefs/security.md` - security audit
-- `~/.claude/chefs/qa.md` - QA review
-- `~/.claude/chefs/architect.md` - architecture review
-- `~/.claude/chefs/docs.md` - documentation
+- `~/.claude/agents/engineer.md` - generic engineering agent
+- `~/.claude/agents/product.md` - product scope review
+- `~/.claude/agents/designer.md` - UX/flow review
+- `~/.claude/agents/security.md` - security audit
+- `~/.claude/agents/qa.md` - QA review
+- `~/.claude/agents/architect.md` - architecture review
+- `~/.claude/agents/docs.md` - documentation
 
 **Resolution order:** Project-specific agents override system-wide agents.
 

@@ -1,6 +1,36 @@
 ---
 chef_id: sanitation_inspector_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - inspect
+
+input_contract:
+  requires_from: any_chef
+  required_fields:
+    - implementation_artifact
+  optional_fields:
+    - implementation_commits
+    - high_risk_files
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - hygiene_report
+    - compliance_report
+    - safety_report
+  handoff_to: null
+  handoff_fields:
+    - inspection_result
+    - violations
+    - recommendations
 
 traits:
   risk_posture: conservative
@@ -34,6 +64,16 @@ escalation:
     - HIGH severity violation found
     - Recipe compliance shows major drift
     - Safety inspection fails
+  escalates_to:
+    - condition: security_violation
+      target: security_chef
+      reason: "Security violation requires security review"
+    - condition: implementation_drift
+      target: engineer_chef
+      reason: "Implementation differs from plan"
+    - condition: scope_drift
+      target: product_chef
+      reason: "Scope creep detected - product decision needed"
 
 rubric:
   ready_for_merge:
@@ -57,13 +97,19 @@ compatible_quests:
 
 tool_policy:
   forbidden:
-    - Auto-approve
-    - Code modification
-    - Bypassing violations
+    - auto_approve
+    - code_modification
+    - bypassing_violations
   allowed:
-    - Inspection
-    - Violation reporting
-    - Compliance verification
+    - inspection
+    - violation_reporting
+    - compliance_verification
+
+fallback_behavior:
+  on_insufficient_context: inspect_without_context
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: report_partial
+  max_clarification_rounds: 1
 ---
 
 # Chef: Sanitation Inspector Chef

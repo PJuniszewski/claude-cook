@@ -1,6 +1,35 @@
 ---
 chef_id: ux_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - ux
+
+input_contract:
+  requires_from: product_chef
+  required_fields:
+    - approved_scope
+  optional_fields:
+    - user_value_statement
+    - non_goals
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - user_flow
+    - accessibility_notes
+  handoff_to: architect_chef
+  handoff_fields:
+    - ux_requirements
+    - user_flow
+    - accessibility_concerns
 
 traits:
   risk_posture: balanced
@@ -33,6 +62,13 @@ escalation:
     - UI pattern is ambiguous after discussion
     - Accessibility regression cannot be avoided
     - User flow has no clear discovery path
+  escalates_to:
+    - condition: breaking_pattern_change
+      target: product_chef
+      reason: "UX pattern break needs product approval"
+    - condition: accessibility_regression
+      target: product_chef
+      reason: "Accessibility impact requires stakeholder decision"
 
 rubric:
   ready_for_merge:
@@ -52,12 +88,18 @@ skill_loadout:
 
 tool_policy:
   forbidden:
-    - Code implementation
-    - Architecture decisions
+    - code_implementation
+    - architecture_decisions
   allowed:
-    - Flow diagrams
-    - UI review
-    - Accessibility audit
+    - flow_diagrams
+    - ui_review
+    - accessibility_audit
+
+fallback_behavior:
+  on_insufficient_context: needs-clarification
+  on_conflicting_requirements: escalate_to_product
+  on_timeout: proceed_with_warning
+  max_clarification_rounds: 2
 ---
 
 # Chef: UX Chef

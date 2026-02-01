@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Tests for chef file synchronization between directories.
-Ensures .claude/chefs/ and chefs/ are in sync.
+Tests for chef files in .claude/agents/.
+Verifies that all expected chef files exist with correct structure.
 
 Run: python3 tests/test_chef_sync.py
 """
 
 import os
 import sys
-import hashlib
+import re
 from pathlib import Path
 
 GREEN = "\033[92m"
@@ -16,72 +16,86 @@ RED = "\033[91m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
+EXPECTED_CHEFS = [
+    "architect_chef.md",
+    "docs_chef.md",
+    "engineer_chef.md",
+    "product_chef.md",
+    "qa_chef.md",
+    "release_chef.md",
+    "sanitation_inspector_chef.md",
+    "security_chef.md",
+    "sous_chef.md",
+    "ux_chef.md",
+]
 
-def get_file_hash(filepath: Path) -> str:
-    """Get MD5 hash of file content."""
-    return hashlib.md5(filepath.read_bytes()).hexdigest()
+REQUIRED_FIELDS = [
+    "chef_id",
+    "version",
+    "phase_affinity",
+    "output_contract",
+    "traits",
+    "non_negotiables",
+    "allowed_scope",
+    "escalation",
+    "rubric",
+]
+
+
+def check_chef_structure(filepath: Path) -> list[str]:
+    """Check if chef file has required YAML fields."""
+    content = filepath.read_text()
+    errors = []
+
+    for field in REQUIRED_FIELDS:
+        if f"{field}:" not in content:
+            errors.append(f"Missing field: {field}")
+
+    # Check for review_v1 output contract
+    if "format: review_v1" not in content:
+        errors.append("Missing output_contract format: review_v1")
+
+    return errors
 
 
 def main():
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
 
-    claude_chefs_dir = project_root / ".claude" / "chefs"
-    root_chefs_dir = project_root / "chefs"
+    agents_dir = project_root / ".claude" / "agents"
 
     print(f"\n{'='*60}")
-    print("Chef File Synchronization Test")
+    print("Chef Files Validation Test")
     print(f"{'='*60}\n")
 
-    if not claude_chefs_dir.exists():
-        print(f"{RED}.claude/chefs/ does not exist{RESET}")
+    if not agents_dir.exists():
+        print(f"{RED}.claude/agents/ does not exist{RESET}")
         sys.exit(1)
 
-    if not root_chefs_dir.exists():
-        print(f"{YELLOW}chefs/ does not exist - skipping sync check{RESET}")
-        sys.exit(0)
+    # Get all chef files
+    chef_files = {f.name: f for f in agents_dir.glob("*_chef.md")}
 
-    # Get all chef files from .claude/chefs/
-    claude_chefs = {f.name: f for f in claude_chefs_dir.glob("*_chef.md")}
-    root_chefs = {f.name: f for f in root_chefs_dir.glob("*_chef.md")}
+    print(f"Found {len(chef_files)} chef files in .claude/agents/\n")
 
     errors = []
     warnings = []
 
-    # Check for missing files
-    missing_in_root = set(claude_chefs.keys()) - set(root_chefs.keys())
-    missing_in_claude = set(root_chefs.keys()) - set(claude_chefs.keys())
+    # Check for expected chefs
+    for expected in EXPECTED_CHEFS:
+        if expected not in chef_files:
+            errors.append(f"Missing expected chef: {expected}")
 
-    for name in missing_in_root:
-        warnings.append(f"Missing in chefs/: {name}")
+    # Check each chef file structure
+    for name, filepath in sorted(chef_files.items()):
+        structure_errors = check_chef_structure(filepath)
 
-    for name in missing_in_claude:
-        warnings.append(f"Missing in .claude/chefs/: {name}")
-
-    # Check for content differences
-    common = set(claude_chefs.keys()) & set(root_chefs.keys())
-    out_of_sync = []
-
-    for name in sorted(common):
-        claude_hash = get_file_hash(claude_chefs[name])
-        root_hash = get_file_hash(root_chefs[name])
-
-        if claude_hash != root_hash:
-            out_of_sync.append(name)
-            errors.append(f"OUT OF SYNC: {name}")
-
-    # Print results
-    print(f"Files in .claude/chefs/: {len(claude_chefs)}")
-    print(f"Files in chefs/: {len(root_chefs)}")
-    print(f"Common files: {len(common)}")
-    print()
-
-    for name in sorted(common):
-        if name in out_of_sync:
-            status = f"{RED}OUT OF SYNC{RESET}"
+        if structure_errors:
+            print(f"  [{RED}INVALID{RESET}] {name}")
+            for err in structure_errors:
+                print(f"      - {err}")
+            errors.extend([f"{name}: {e}" for e in structure_errors])
         else:
-            status = f"{GREEN}IN SYNC{RESET}"
-        print(f"  [{status}] {name}")
+            print(f"  [{GREEN}VALID{RESET}] {name}")
 
     if warnings:
         print(f"\n{YELLOW}Warnings:{RESET}")
@@ -95,11 +109,10 @@ def main():
 
     print(f"\n{'='*60}")
     if errors:
-        print(f"{RED}SYNC CHECK FAILED{RESET}")
-        print(f"Run: cp .claude/chefs/*_chef.md chefs/")
+        print(f"{RED}VALIDATION FAILED{RESET}")
         sys.exit(1)
     else:
-        print(f"{GREEN}All common files are in sync{RESET}")
+        print(f"{GREEN}All chef files are valid{RESET}")
         sys.exit(0)
 
 

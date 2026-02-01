@@ -1,6 +1,34 @@
 ---
 chef_id: docs_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - docs
+
+input_contract:
+  requires_from: security_chef
+  required_fields:
+    - security_status
+  optional_fields:
+    - security_notes
+    - threat_assessment
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - files_to_update
+    - migration_guide
+  handoff_to: release_chef
+  handoff_fields:
+    - documentation_status
+    - breaking_changes_documented
 
 traits:
   risk_posture: balanced
@@ -32,6 +60,13 @@ escalation:
     - Deprecation requires announcement strategy
     - Migration guide complexity unclear
     - Documentation conflicts with implementation
+  escalates_to:
+    - condition: breaking_change_undocumented
+      target: product_chef
+      reason: "Breaking change requires migration strategy"
+    - condition: api_docs_conflict
+      target: architect_chef
+      reason: "Documentation conflicts with API design"
 
 rubric:
   ready_for_merge:
@@ -51,12 +86,18 @@ skill_loadout:
 
 tool_policy:
   forbidden:
-    - Implementation changes
-    - Code modifications
+    - implementation_changes
+    - code_modifications
   allowed:
-    - Documentation planning
-    - Example writing
-    - Changelog updates
+    - documentation_planning
+    - example_writing
+    - changelog_updates
+
+fallback_behavior:
+  on_insufficient_context: needs-clarification
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: proceed_with_warning
+  max_clarification_rounds: 2
 ---
 
 # Chef: Docs Chef

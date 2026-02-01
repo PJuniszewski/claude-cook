@@ -88,7 +88,7 @@ Step 0.0 - Artifact Created
 |------|--------|-----------|
 | CLAUDE.md | _Pending_ | |
 | README.md | _Pending_ | |
-| .claude/chefs/*.md | _Pending_ | |
+| .claude/agents/*.md | _Pending_ | |
 
 ## Hard Rules (must not be violated)
 _Pending..._
@@ -653,11 +653,11 @@ Search for and read the following files (do not fail if missing):
 3. `ENGINEERING.md` - engineering standards
 4. `README.md` - project overview
 5. `docs/**/*.md` - architecture, ADRs, decisions
-6. `.claude/chefs/*.md` - project-specific chefs
+6. `.claude/agents/*.md` - project-specific chefs
 
 **Chef Resolution Order:**
-1. Project-specific chefs in `<project>/.claude/chefs/`
-2. System-wide chefs in `~/.claude/chefs/`
+1. Project-specific chefs in `<project>/.claude/agents/`
+2. System-wide chefs in `~/.claude/agents/`
 
 **System-Wide Chefs Available:**
 - `engineer.md` - Head chef (implementation)
@@ -1171,8 +1171,8 @@ microwave
 
 **For each cooking phase, use chefs in this priority:**
 
-1. **Project-specific chef** (if exists): `<project>/.claude/chefs/<project>-<role>.md`
-2. **System-wide chef** (fallback): `~/.claude/chefs/<role>.md`
+1. **Project-specific chef** (if exists): `<project>/.claude/agents/<project>-<role>.md`
+2. **System-wide chef** (fallback): `~/.claude/agents/<role>.md`
 
 | Phase | Project Chef | System Chef |
 |-------|-------------|-------------|

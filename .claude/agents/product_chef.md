@@ -1,6 +1,36 @@
 ---
 chef_id: product_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - scope
+
+input_contract:
+  requires_from: user_request
+  required_fields:
+    - feature_description
+  optional_fields:
+    - context
+    - constraints
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - scope_definition
+    - user_value
+  handoff_to: architect_chef
+  handoff_fields:
+    - approved_scope
+    - non_goals
+    - success_metrics
+    - priority
 
 traits:
   risk_posture: conservative
@@ -33,6 +63,13 @@ escalation:
     - Scope conflicts with existing product direction
     - Multiple valid interpretations of requirements exist
     - Feature has unclear success metrics after clarification
+  escalates_to:
+    - condition: technical_constraints_block_scope
+      target: architect_chef
+      reason: "Need technical feasibility assessment"
+    - condition: security_sensitive_feature
+      target: security_chef
+      reason: "Feature requires security review before approval"
 
 rubric:
   ready_for_merge:
@@ -51,12 +88,18 @@ skill_loadout:
 
 tool_policy:
   forbidden:
-    - Code generation
-    - Implementation decisions
+    - code_generation
+    - implementation_decisions
   allowed:
-    - Scope analysis
-    - Prioritization
-    - User value assessment
+    - scope_analysis
+    - prioritization
+    - user_value_assessment
+
+fallback_behavior:
+  on_insufficient_context: needs-clarification
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: needs-clarification
+  max_clarification_rounds: 2
 ---
 
 # Chef: Product Chef

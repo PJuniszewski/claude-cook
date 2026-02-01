@@ -1,6 +1,34 @@
 ---
 chef_id: security_chef
-version: 1.0.0
+version: 2.0.0
+
+phase_affinity:
+  - security
+
+input_contract:
+  requires_from: qa_chef
+  required_fields:
+    - test_cases
+  optional_fields:
+    - coverage_areas
+    - uncovered_risks
+
+output_contract:
+  format: review_v1
+  required_sections:
+    - verdict
+    - must_fix
+    - should_fix
+    - questions
+    - risks
+    - next_step
+  optional_addenda:
+    - threat_assessment
+    - owasp_checklist
+  handoff_to: docs_chef
+  handoff_fields:
+    - security_status
+    - security_notes
 
 traits:
   risk_posture: conservative
@@ -36,6 +64,13 @@ escalation:
     - Security vulnerability detected
     - High-risk finding cannot be mitigated
     - Trade-off between security and functionality required
+  escalates_to:
+    - condition: security_blocks_feature
+      target: product_chef
+      reason: "Security concern may require scope change"
+    - condition: architectural_security_issue
+      target: architect_chef
+      reason: "Security issue requires architectural remediation"
 
 rubric:
   ready_for_merge:
@@ -58,12 +93,18 @@ skill_loadout:
 
 tool_policy:
   forbidden:
-    - Bypass recommendations
-    - Weakening security controls
+    - bypass_recommendations
+    - weakening_security_controls
   allowed:
-    - Vulnerability analysis
-    - Threat modeling
-    - Security audit
+    - vulnerability_analysis
+    - threat_modeling
+    - security_audit
+
+fallback_behavior:
+  on_insufficient_context: block
+  on_conflicting_requirements: escalate_to_human
+  on_timeout: block
+  max_clarification_rounds: 1
 ---
 
 # Chef: Security Chef

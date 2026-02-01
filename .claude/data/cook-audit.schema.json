@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://juni.dev/cook-audit.schema.json",
+  "title": "Cook Audit Log Entry",
+  "description": "Schema for audit log entries in the cook workflow",
+  "type": "object",
+  "required": ["timestamp", "order_id", "event_type"],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of the event"
+    },
+    "order_id": {
+      "type": "string",
+      "description": "Unique identifier for the cook order"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "phase_start",
+        "phase_complete",
+        "escalation",
+        "blocker",
+        "handoff",
+        "validation_failure",
+        "human_intervention",
+        "cook_complete"
+      ],
+      "description": "Type of audit event"
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["scope", "ux", "plan", "test", "security", "docs", "release", "inspect", "monitor"],
+      "description": "Current cook phase"
+    },
+    "chef_id": {
+      "type": "string",
+      "description": "ID of the chef involved in this event"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["approve", "block", "request-changes", "needs-clarification"],
+      "description": "Chef verdict if applicable"
+    },
+    "escalated": {
+      "type": "boolean",
+      "description": "Whether this event involved escalation"
+    },
+    "escalation": {
+      "type": "object",
+      "properties": {
+        "from_chef": {
+          "type": "string",
+          "description": "Chef that initiated escalation"
+        },
+        "to_chef": {
+          "type": "string",
+          "description": "Chef that received escalation"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for escalation"
+        },
+        "condition": {
+          "type": "string",
+          "description": "Condition that triggered escalation"
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of blocker"
+          },
+          "description": {
+            "type": "string",
+            "description": "Blocker description"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["HIGH", "MEDIUM", "LOW"]
+          }
+        }
+      },
+      "description": "List of blockers identified"
+    },
+    "risks_identified": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["HIGH", "MEDIUM", "LOW"]
+          },
+          "mitigation": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Risks identified during this phase"
+    },
+    "handoff": {
+      "type": "object",
+      "properties": {
+        "from_chef": {
+          "type": "string"
+        },
+        "to_chef": {
+          "type": "string"
+        },
+        "validation_status": {
+          "type": "string",
+          "enum": ["passed", "failed", "warning"]
+        },
+        "missing_fields": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "description": "Handoff validation details"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "description": "Duration of the phase/event in seconds"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Additional event-specific metadata"
+    }
+  }
+}

@@ -4,17 +4,20 @@ Quick reference for who does what in the `/cook` workflow.
 
 ## Chef Overview
 
-| Chef | Phase | Primary Responsibility |
-|------|-------|------------------------|
-| Product Chef | Step 2 | Scope approval, user value validation |
-| UX Chef | Step 3 | User flow, accessibility, experience |
-| Architect Chef | Step 4 | System design, alternatives, trade-offs |
-| Engineer Chef | Step 4 | Implementation plan, file changes |
-| QA Chef | Step 5 | Test strategy, edge cases, acceptance criteria |
-| Security Chef | Step 6 | Vulnerability audit, threat assessment |
-| Docs Chef | Step 7 | Documentation updates, usage examples |
-| Release Chef | Post-cook | Versioning, changelog, release notes |
-| Sanitation Inspector | Post-cook | Code hygiene, plan compliance, quality review |
+| Chef | phase_affinity | Primary Responsibility |
+|------|----------------|------------------------|
+| Product Chef | scope | Scope approval, user value validation |
+| UX Chef | ux | User flow, accessibility, experience |
+| Architect Chef | plan | System design, alternatives, trade-offs |
+| Engineer Chef | plan | Implementation plan, file changes |
+| QA Chef | test | Test strategy, edge cases, acceptance criteria |
+| Security Chef | security | Vulnerability audit, threat assessment |
+| Docs Chef | docs | Documentation updates, usage examples |
+| Release Chef | release | Versioning, changelog, release notes |
+| Sanitation Inspector | inspect | Code hygiene, plan compliance, quality review |
+| Sous Chef | monitor | Background monitoring, drift detection |
+
+**All chefs output reviews in `review_v1` format.** See [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md).
 
 ---
 
@@ -168,8 +171,8 @@ Quick reference for who does what in the `/cook` workflow.
 
 When multiple chef definitions exist:
 
-1. **Project-specific** (`<project>/.claude/chefs/<name>_chef.md`)
-2. **System-wide** (`~/.claude/chefs/<name>.md`)
+1. **Project-specific** (`<project>/.claude/agents/<name>_chef.md`)
+2. **System-wide** (`~/.claude/agents/<name>.md`)
 
 Project-specific chefs override system-wide chefs for the same role.
 
@@ -177,6 +180,7 @@ Project-specific chefs override system-wide chefs for the same role.
 
 ## See Also
 
+- [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md) - Standard review output format
 - [COOK_CONTRACT.md](COOK_CONTRACT.md) - What each chef must produce
 - [ANTI_PATTERNS.md](ANTI_PATTERNS.md) - Common mistakes
-- Individual chef files in `.claude/chefs/`
+- Individual chef files in `.claude/agents/`

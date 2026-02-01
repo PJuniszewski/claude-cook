@@ -29,7 +29,7 @@
 |------|--------|-----------|
 | CLAUDE.md | _Pending_ | |
 | README.md | _Pending_ | |
-| .claude/chefs/*.md | _Pending_ | |
+| .claude/agents/*.md | _Pending_ | |
 
 ## Hard Rules (must not be violated)
 - _Pending..._

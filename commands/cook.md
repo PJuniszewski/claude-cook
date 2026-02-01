@@ -179,12 +179,28 @@ Step 0.0 - Artifact Created
 
 # Phase 0 - Project Policy & Context
 
+**This phase loads the NARRATIVE LAYER - global project context.**
+
+Load ALL narrative files that exist (they complement each other):
+- `CLAUDE.md` - Claude Code native format (highest priority)
+- `AGENTS.md` - Vercel/industry convention
+- `README.md` - general project documentation
+
+**Priority on conflict:** CLAUDE.md > AGENTS.md > README.md
+
+This tells you:
+- What the project does
+- How the team works
+- What patterns to follow
+- What to avoid
+
 ## Sources Scanned
-| File | Status | Key Rules |
-|------|--------|-----------|
-| CLAUDE.md | _Pending_ | |
-| README.md | _Pending_ | |
-| .claude/chefs/*.md | _Pending_ | |
+| File | Purpose | Priority | Status | Key Rules |
+|------|---------|----------|--------|-----------|
+| CLAUDE.md | Claude-specific instructions | 1 (highest) | _Pending_ | |
+| AGENTS.md | Agent instructions | 2 | _Pending_ | |
+| README.md | General project docs | 3 (lowest) | _Pending_ | |
+| .claude/agents/*.md | Chef contracts (loaded per-phase) | N/A | _Noted_ | |
 
 ## Hard Rules (must not be violated)
 _Pending..._
@@ -381,8 +397,39 @@ _Pending..._
 
 Only AFTER artifact exists:
 1. Run each cooking phase
-2. Update artifact after EACH phase
-3. Clearly label each cooking phase in output
+2. **CRITICAL: Read the chef file BEFORE each phase** (see Chef Loading below)
+3. Update artifact after EACH phase
+4. Clearly label each cooking phase in output
+
+#### Chef Loading (MANDATORY) - Operational Layer
+
+**Phase 0 loaded the narrative (CLAUDE.md). Now load operational contracts (chefs).**
+
+Before executing each step, **load the corresponding chef** following resolution order:
+
+| Step | Chef Role | Resolution Order |
+|------|-----------|------------------|
+| Step 2 (Product) | product_chef | 1. `.claude/agents/product_chef.md` 2. `~/.claude/agents/product_chef.md` |
+| Step 3 (UX) | ux_chef | 1. `.claude/agents/ux_chef.md` 2. `~/.claude/agents/ux_chef.md` |
+| Step 4 (Plan) | architect_chef, engineer_chef | Load both in order |
+| Step 5 (QA) | qa_chef | 1. `.claude/agents/qa_chef.md` 2. `~/.claude/agents/qa_chef.md` |
+| Step 6 (Security) | security_chef | 1. `.claude/agents/security_chef.md` 2. `~/.claude/agents/security_chef.md` |
+| Step 7 (Docs) | docs_chef | 1. `.claude/agents/docs_chef.md` 2. `~/.claude/agents/docs_chef.md` |
+
+**Resolution algorithm:**
+```
+1. Try: Glob(".claude/agents/<role>_chef.md")
+2. If not found, try: Glob("~/.claude/agents/<role>_chef.md")
+3. If not found, try: Glob(".claude/agents/*<role>*.md") # custom naming
+4. If still not found: proceed without chef (warn in artifact)
+```
+
+**Why this matters:** Chef files contain `non_negotiables`, `rubric`, and `output_contract` that MUST be applied. Without reading them, you're cooking blind.
+
+After reading, apply:
+- `non_negotiables` - rules that cannot be violated
+- `rubric.ready_for_merge` - checklist that must pass
+- `output_contract` - review format (review_v1)
 
 ### Step 3: Finalize
 
@@ -435,16 +482,16 @@ This command uses a layered agent system:
 
 **Required for best results (mise en place):**
 - `CLAUDE.md` in project root - defines project rules and constraints
-- `<project>/.claude/chefs/` - project-specific review chefs
+- `<project>/.claude/agents/` - project-specific review chefs
 
 **System-wide fallbacks (always available):**
-- `~/.claude/chefs/engineer.md` - generic engineering chef
-- `~/.claude/chefs/product.md` - product scope review
-- `~/.claude/chefs/designer.md` - UX/flow review
-- `~/.claude/chefs/security.md` - security audit
-- `~/.claude/chefs/qa.md` - QA review
-- `~/.claude/chefs/architect.md` - architecture review
-- `~/.claude/chefs/docs.md` - documentation
+- `~/.claude/agents/engineer.md` - generic engineering chef
+- `~/.claude/agents/product.md` - product scope review
+- `~/.claude/agents/designer.md` - UX/flow review
+- `~/.claude/agents/security.md` - security audit
+- `~/.claude/agents/qa.md` - QA review
+- `~/.claude/agents/architect.md` - architecture review
+- `~/.claude/agents/docs.md` - documentation
 
 **Resolution order:** Project-specific agents override system-wide agents.
 
