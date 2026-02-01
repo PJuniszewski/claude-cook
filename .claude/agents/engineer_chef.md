@@ -50,6 +50,16 @@ escalation:
     - No clear implementation path exists
     - Scope remains ambiguous after clarification
     - Technical risk exceeds perceived value
+  escalates_to:
+    - condition: affects_5_plus_modules
+      target: architect_chef
+      reason: "Cross-cutting change requires architectural review"
+    - condition: new_architectural_pattern
+      target: architect_chef
+      reason: "New pattern needs architectural approval"
+    - condition: security_concern
+      target: security_chef
+      reason: "Potential security implications"
 
 rubric:
   ready_for_merge:

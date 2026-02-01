@@ -50,6 +50,16 @@ escalation:
     - Breaking change not explicitly approved
     - Version bump type unclear
     - Release blocked by test failures
+  escalates_to:
+    - condition: version_conflict
+      target: product_chef
+      reason: "Release versioning conflict needs resolution"
+    - condition: breaking_change_not_approved
+      target: product_chef
+      reason: "Breaking change needs explicit approval"
+    - condition: security_release
+      target: security_chef
+      reason: "Security release needs security sign-off"
 
 rubric:
   ready_for_merge:

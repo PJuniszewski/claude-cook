@@ -49,6 +49,16 @@ escalation:
     - No acceptable alternative exists
     - Change fundamentally conflicts with system design
     - Risk assessment shows HIGH with no viable mitigation
+  escalates_to:
+    - condition: trade_offs_affect_ux
+      target: ux_chef
+      reason: "Technical decisions impact user experience"
+    - condition: scope_change_needed
+      target: product_chef
+      reason: "Technical constraints require scope adjustment"
+    - condition: security_implications
+      target: security_chef
+      reason: "Architectural decision has security impact"
 
 rubric:
   ready_for_merge:

@@ -48,6 +48,13 @@ escalation:
     - Deprecation requires announcement strategy
     - Migration guide complexity unclear
     - Documentation conflicts with implementation
+  escalates_to:
+    - condition: breaking_change_undocumented
+      target: product_chef
+      reason: "Breaking change requires migration strategy"
+    - condition: api_docs_conflict
+      target: architect_chef
+      reason: "Documentation conflicts with API design"
 
 rubric:
   ready_for_merge:

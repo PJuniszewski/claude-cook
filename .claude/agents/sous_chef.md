@@ -49,6 +49,13 @@ escalation:
     - Repeated violations in same area
     - Pattern of uncooked changes detected
     - Post-mortem reveals systemic issue
+  escalates_to:
+    - condition: uncooked_sensitive_change
+      target: product_chef
+      reason: "Sensitive change without cook artifact needs review"
+    - condition: repeated_violations
+      target: product_chef
+      reason: "Pattern of violations indicates process issue"
 
 rubric:
   ready_for_merge:

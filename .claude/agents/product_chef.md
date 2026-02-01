@@ -49,6 +49,13 @@ escalation:
     - Scope conflicts with existing product direction
     - Multiple valid interpretations of requirements exist
     - Feature has unclear success metrics after clarification
+  escalates_to:
+    - condition: technical_constraints_block_scope
+      target: architect_chef
+      reason: "Need technical feasibility assessment"
+    - condition: security_sensitive_feature
+      target: security_chef
+      reason: "Feature requires security review before approval"
 
 rubric:
   ready_for_merge:

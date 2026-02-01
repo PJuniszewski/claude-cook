@@ -52,6 +52,13 @@ escalation:
     - Security vulnerability detected
     - High-risk finding cannot be mitigated
     - Trade-off between security and functionality required
+  escalates_to:
+    - condition: security_blocks_feature
+      target: product_chef
+      reason: "Security concern may require scope change"
+    - condition: architectural_security_issue
+      target: architect_chef
+      reason: "Security issue requires architectural remediation"
 
 rubric:
   ready_for_merge:

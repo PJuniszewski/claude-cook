@@ -49,6 +49,13 @@ escalation:
     - UI pattern is ambiguous after discussion
     - Accessibility regression cannot be avoided
     - User flow has no clear discovery path
+  escalates_to:
+    - condition: breaking_pattern_change
+      target: product_chef
+      reason: "UX pattern break needs product approval"
+    - condition: accessibility_regression
+      target: product_chef
+      reason: "Accessibility impact requires stakeholder decision"
 
 rubric:
   ready_for_merge:

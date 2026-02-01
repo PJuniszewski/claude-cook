@@ -69,6 +69,33 @@ Optional flags:
 
 ---
 
+## Router Policy
+
+Before executing any step, consult `ROUTER_POLICY.md` for:
+
+1. **Which chef(s) to invoke** - `phase_routing` maps phases to chefs
+2. **Escalation routes** - When a chef signals escalation, follow defined paths
+3. **Conflict resolution** - If multiple chefs disagree, apply priority rules
+4. **Phase skip rules** - Determine if phase can be skipped (e.g., no UX changes)
+
+### Router Algorithm
+
+```
+For each cooking phase:
+1. Load ROUTER_POLICY.md phase_routing for current phase
+2. For each chef in phase:
+   a. Load chef contract from .claude/agents/
+   b. Execute chef review
+   c. Check for escalation triggers in chef output
+   d. If escalation needed → route to target chef
+3. Collect all verdicts
+4. Apply conflict resolution if multiple verdicts
+5. Record final verdict in artifact
+6. Proceed or block based on verdict
+```
+
+---
+
 ## Cooking Modes
 
 ### --well-done (default)

@@ -51,6 +51,16 @@ escalation:
     - Regression in existing functionality detected
     - Acceptance criteria cannot be verified
     - Test strategy conflicts with timeline constraints
+  escalates_to:
+    - condition: regression_detected
+      target: product_chef
+      reason: "Existing functionality affected - scope decision needed"
+    - condition: acceptance_criteria_unverifiable
+      target: product_chef
+      reason: "Cannot verify success criteria"
+    - condition: security_test_gap
+      target: security_chef
+      reason: "Security testing coverage concern"
 
 rubric:
   ready_for_merge:

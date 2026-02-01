@@ -51,6 +51,16 @@ escalation:
     - HIGH severity violation found
     - Recipe compliance shows major drift
     - Safety inspection fails
+  escalates_to:
+    - condition: security_violation
+      target: security_chef
+      reason: "Security violation requires security review"
+    - condition: implementation_drift
+      target: engineer_chef
+      reason: "Implementation differs from plan"
+    - condition: scope_drift
+      target: product_chef
+      reason: "Scope creep detected - product decision needed"
 
 rubric:
   ready_for_merge:
