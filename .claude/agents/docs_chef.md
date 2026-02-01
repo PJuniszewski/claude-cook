@@ -1,9 +1,37 @@
 ---
 chef_id: docs_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - docs
+
+tier_behavior:
+  activation_tiers: [3, 4]  # Only for high/critical risk
+  depth_by_tier:
+    tier_0: skip
+    tier_1: skip
+    tier_2: skip
+    tier_3: standard
+    tier_4: full
+
+lane_participation:
+  green:
+    active: false
+    reason: "Low-risk changes don't need docs review"
+  amber:
+    active: false
+    reason: "Medium-risk uses simplified flow"
+  red:
+    active: true
+    depth: standard
+    requirements:
+      - documentation_status: required
+      - breaking_changes_documented: required
+      - usage_examples: required for new features
+    tier_4_additions:
+      - migration_guide: required
+      - announcement_plan: required
+      - compliance_documentation: required
 
 input_contract:
   requires_from: security_chef

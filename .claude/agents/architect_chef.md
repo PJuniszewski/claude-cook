@@ -1,9 +1,45 @@
 ---
 chef_id: architect_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - plan
+
+tier_behavior:
+  activation_tiers: [2, 3, 4]  # Medium risk and above
+  depth_by_tier:
+    tier_0: skip
+    tier_1: skip
+    tier_2: conditional  # Only if cross-module
+    tier_3: full
+    tier_4: full_with_adr
+
+lane_participation:
+  green:
+    active: false
+    reason: "Simple changes don't need architectural review"
+  amber:
+    active: conditional
+    trigger: cross_module_change OR new_integration
+    depth: standard
+    requirements:
+      - affected_modules: required
+      - basic_risk_assessment: required
+      - alternatives: 1 alternative (brief)
+  red:
+    active: true
+    depth: full
+    requirements:
+      - system_impact: required
+      - alternatives_considered: 2+ with pros/cons
+      - trade_offs: detailed
+      - risk_assessment: required with mitigations
+      - integration_points: documented
+    tier_4_additions:
+      - adr_required: true
+      - performance_model: required
+      - capacity_planning: required
+      - disaster_recovery_impact: assessed
 
 input_contract:
   requires_from: product_chef

@@ -8,7 +8,7 @@ This repo contains the **juni** plugin - a Claude Code plugin suite combining:
 
 ## Architecture: Multi-Layer Context System
 
-Cook uses a **layered approach** combining narrative context with operational contracts and explicit policies:
+Cook uses a **layered approach** combining narrative context with operational contracts, explicit policies, and **risk-based routing**:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -18,27 +18,33 @@ Cook uses a **layered approach** combining narrative context with operational co
 └─────────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────┐
+│ RISK_TIERS.md (Risk Classification Layer)               │
+│ "How risky is this change"                              │
+│ → Tier 0-4 classification, lane assignment (Green/Amber/Red) │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
 │ ROUTER_POLICY.md (Router/Policy Layer)                  │
 │ "Who decides when"                                      │
-│ → Phase routing, escalation paths, conflict resolution  │
+│ → Lane routing, chef activation, escalation paths       │
 └─────────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────┐
 │ .claude/agents/*_chef.md (Operational Layer)            │
-│ non_negotiables, escalation, rubric, output_contract    │
-│ → Per-phase contracts, loaded before each step          │
+│ non_negotiables, tier_behavior, lane_participation      │
+│ → Per-chef rules with depth varying by tier             │
 └─────────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────┐
 │ CHEF_CONTRACTS.md (Handoff Layer)                       │
 │ "What is passed to whom"                                │
-│ → Input/output contracts, handoff validation            │
+│ → Contract variants: light_v1/mini_v1/full_v1           │
 └─────────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────┐
 │ FALLBACK_POLICY.md (Fallback Layer)                     │
 │ "What when we can't decide"                             │
-│ → Recovery paths, timeouts, degradation modes           │
+│ → Lane fallbacks, tier 4 human approval, recovery paths │
 └─────────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────┐
@@ -58,13 +64,14 @@ Cook uses a **layered approach** combining narrative context with operational co
 | Layer | File | Purpose |
 |-------|------|---------|
 | Narrative | CLAUDE.md | Goals, conventions, context |
-| Router | ROUTER_POLICY.md | Phase→chef mapping, escalation |
-| Operational | .claude/agents/*.md | Per-chef rules and contracts |
-| Handoff | CHEF_CONTRACTS.md | What data passes between chefs |
-| Fallback | FALLBACK_POLICY.md | Recovery when things go wrong |
+| Risk | RISK_TIERS.md | Tier 0-4 classification, lane routing |
+| Router | ROUTER_POLICY.md | Lane→chef mapping, escalation |
+| Operational | .claude/agents/*.md | Per-chef rules with tier_behavior |
+| Handoff | CHEF_CONTRACTS.md | Contract variants by lane |
+| Fallback | FALLBACK_POLICY.md | Lane fallbacks, tier 4 recovery |
 | Audit | .claude/data/*.jsonl | Learning from past cooks |
 
-This combines global context with operational rigor and explicit failure handling.
+This combines global context with **risk-based routing** - 80% of changes flow through Green lane (minimal ceremony) while high-risk changes get full governance.
 
 ## Quick Start
 
@@ -130,12 +137,31 @@ All chefs output reviews using `review_v1` format. See [REVIEW_CONTRACT.md](REVI
 See [CHEF_MATRIX.md](CHEF_MATRIX.md) for inputs/outputs.
 See [CHEF_CONTRACTS.md](CHEF_CONTRACTS.md) for handoff contracts between chefs.
 
+## Risk Tiers & Lanes
+
+Cook uses **risk-based routing** to balance speed vs. ceremony:
+
+| Tier | Risk Level | Lane | Chefs Active |
+|------|------------|------|--------------|
+| 0 | Trivial | Green | engineer, qa (shallow) |
+| 1 | Low | Green | engineer, qa, security (checklist) |
+| 2 | Medium | Amber | engineer, qa, security, architect (conditional) |
+| 3 | High | Red | All chefs |
+| 4 | Critical | Red | All chefs + human approval |
+
+**Lane targets:**
+- **Green (80%):** docs, tests, internal refactors, small fixes
+- **Amber (15%):** API changes, business logic, integrations
+- **Red (5%):** auth, payments, PII, schema, compliance
+
+See [RISK_TIERS.md](RISK_TIERS.md) for classification algorithm.
+
 ## Anti-patterns
 
 See [ANTI_PATTERNS.md](ANTI_PATTERNS.md). Key points:
 - /juni:cook is NOT for "generate entire app"
 - /juni:cook does NOT replace human review
-- If /juni:cook slows you down, use `--microwave`
+- If /juni:cook slows you down, use `--microwave` or check if Green lane applies
 
 ## Tasks API Integration
 
@@ -153,21 +179,24 @@ Since Claude Code v2.1.16, `/juni:cook` uses the Tasks API for progress tracking
 | Problem | Solution |
 |---------|----------|
 | "No CLAUDE.md found" | Create one or ignore (uses defaults) |
-| Output too verbose | Use `--microwave` for quick fixes |
-| Chef not activating | Check `.claude/agents/` has the file |
+| Output too verbose | Use `--microwave` or check Green lane eligibility |
+| Chef not activating | Check tier_behavior in chef file |
+| Wrong lane assigned | Use `--tier=N` or `--sensitive` to override |
 | Stuck in Phase 0 | Provide more project context |
 | Order not created | Check `orders/` directory exists |
 | Chef can't decide | Check `FALLBACK_POLICY.md` for recovery |
-| Handoff validation fails | Check `CHEF_CONTRACTS.md` for requirements |
+| Handoff validation fails | Check contract variant (light/mini/full) |
 | Escalation unclear | Check `ROUTER_POLICY.md` for routing |
+| Tier 4 blocked | Human approval required - check notifications |
 
 ## Key Contract Files
 
 | File | Purpose |
 |------|---------|
-| [ROUTER_POLICY.md](ROUTER_POLICY.md) | Phase→chef routing, escalation priority |
-| [CHEF_CONTRACTS.md](CHEF_CONTRACTS.md) | Chef-to-chef handoff contracts |
-| [FALLBACK_POLICY.md](FALLBACK_POLICY.md) | Recovery paths for failures |
+| [RISK_TIERS.md](RISK_TIERS.md) | Risk tier definitions (0-4), lane routing |
+| [ROUTER_POLICY.md](ROUTER_POLICY.md) | Lane→chef routing, escalation priority |
+| [CHEF_CONTRACTS.md](CHEF_CONTRACTS.md) | Contract variants (light/mini/full) |
+| [FALLBACK_POLICY.md](FALLBACK_POLICY.md) | Lane fallbacks, tier 4 recovery |
 | [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md) | Standard review output format |
 | [COOK_CONTRACT.md](COOK_CONTRACT.md) | Artifact structure |
 | [CHEF_MATRIX.md](CHEF_MATRIX.md) | Chef responsibilities matrix |

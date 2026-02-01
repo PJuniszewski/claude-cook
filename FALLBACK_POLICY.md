@@ -1,8 +1,195 @@
-# Fallback Policy v1.0
+# Fallback Policy v1.1
 
 Explicit fallback chains for when things go wrong. No more "proceed with warning" ambiguity.
 
-**Purpose:** Define "what happens when we can't decide" - clear recovery paths for all failure modes.
+**Purpose:** Define "what happens when we can't decide" - clear recovery paths for all failure modes, including **lane classification and transition fallbacks**.
+
+---
+
+## Lane Classification Fallback
+
+When automatic risk classification is uncertain:
+
+```yaml
+lane_classification_fallback:
+  when_uncertain:
+    threshold: confidence < 70%
+    default_action: upgrade_to_amber
+    reason: "When in doubt, add review"
+
+  conflicting_signals:
+    # Path says Tier 1, keywords say Tier 3
+    action: use_higher_tier
+    reason: "Safety-first approach"
+
+  missing_context:
+    # Cannot analyze diff (e.g., new file, binary)
+    action: infer_from_path
+    fallback: amber
+    reason: "Path patterns provide baseline classification"
+
+  classification_error:
+    action: escalate_to_human
+    message: "Could not classify risk tier"
+    provide_context:
+      - attempted_signals
+      - partial_results
+      - error_details
+```
+
+### Classification Decision Tree
+
+```
+1. Attempt full classification (path + keywords + dependencies + size)
+2. If confidence >= 70% → use classified tier
+3. If confidence < 70%:
+   a. If any tier_3_4 signals present → Red lane
+   b. If any tier_2 signals present → Amber lane
+   c. Otherwise → Amber lane (default)
+4. If classification fails completely → escalate to human
+```
+
+---
+
+## Lane Transition Fallback
+
+Rules for upgrading or downgrading lanes mid-cook:
+
+```yaml
+lane_transition:
+  upgrade_rules:
+    # Green → Amber
+    green_to_amber:
+      triggers:
+        - security_concern_raised
+        - cross_module_impact_discovered
+        - scope_expansion_detected
+        - architect_chef_requested
+      action: upgrade_immediately
+      notify: user
+      preserve_work: true  # Keep existing artifact content
+
+    # Amber → Red
+    amber_to_red:
+      triggers:
+        - auth_pattern_detected_mid_review
+        - payment_pattern_detected
+        - pii_detected
+        - security_chef_blocks
+        - breaking_change_confirmed
+      action: upgrade_immediately
+      notify: user
+      add_chefs: [product_chef, ux_chef, docs_chef]
+
+    # Any → Red (Tier 4)
+    to_tier_4:
+      triggers:
+        - compliance_impact_detected
+        - identity_system_touched
+        - encryption_key_involved
+      action: upgrade_with_human_checkpoint
+      block_until: human_acknowledges
+
+  downgrade_rules:
+    # Red → Amber (rare)
+    red_to_amber:
+      allowed: false_positive_confirmed
+      requires: human_approval
+      audit: true
+      message: "Lane downgrade requires explicit approval"
+
+    # Amber → Green (rare)
+    amber_to_green:
+      allowed: scope_significantly_reduced
+      requires: justification_documented
+      audit: true
+
+    # Green stays green
+    green_downgrade:
+      allowed: false  # Can't go below green
+```
+
+### Transition Notification Format
+
+```yaml
+lane_transition_notification:
+  format: |
+    ⚠️ LANE UPGRADE: {old_lane} → {new_lane}
+    Reason: {trigger_reason}
+    New chefs activated: {added_chefs}
+    Action required: {required_action}
+```
+
+---
+
+## Tier 4 Specific Fallbacks
+
+Critical tier (Tier 4) has special handling when human approval is unavailable:
+
+```yaml
+tier_4_fallbacks:
+  human_unavailable:
+    timeout_seconds: 86400  # 24 hours (same as standard)
+
+    on_timeout:
+      action: block_indefinitely
+      reason: "Tier 4 changes require human approval - cannot auto-proceed"
+      escalate_to: project_owner
+      notification:
+        - email_if_configured
+        - slack_if_configured
+        - audit_log_entry
+
+    reminder_intervals: [3600, 14400, 43200, 72000]  # 1h, 4h, 12h, 20h
+
+  emergency_bypass:
+    # Only in documented emergency scenarios
+    allowed_when:
+      - incident_response_mode: true
+      - documented_emergency: true
+    requires:
+      - two_person_rule: true  # Two humans must approve
+      - incident_ticket: required
+      - post_incident_review: scheduled
+    audit:
+      - full_transcript_logged
+      - bypass_reason_documented
+      - reviewers_identified
+
+  partial_approval:
+    # If some human approvers available but not all
+    threshold: majority
+    action: proceed_with_warning
+    requirements:
+      - at_least_one_security_approver
+      - documented_in_artifact
+      - follow_up_required
+
+  compliance_blocker:
+    # When compliance-related and human unavailable
+    action: hard_block
+    message: "Compliance-related changes cannot proceed without human approval"
+    override: none  # No emergency bypass for compliance
+```
+
+### Tier 4 Human Approval Workflow
+
+```
+1. Tier 4 classification confirmed
+2. Cook proceeds through all phases
+3. Before implementation:
+   a. Present full artifact to human
+   b. Request explicit approval
+   c. Log approval (who, when, what)
+4. If timeout:
+   a. Block indefinitely
+   b. Notify project owner
+   c. Log blocking event
+5. After approval:
+   a. Proceed with implementation
+   b. Post-implementation review mandatory
+   c. Sanitation inspection required
+```
 
 ---
 
@@ -265,7 +452,8 @@ degradation_modes:
 
 ## See Also
 
-- [ROUTER_POLICY.md](ROUTER_POLICY.md) - Normal routing behavior
-- [CHEF_CONTRACTS.md](CHEF_CONTRACTS.md) - Contract definitions
+- [RISK_TIERS.md](RISK_TIERS.md) - Risk tier definitions and lane mapping
+- [ROUTER_POLICY.md](ROUTER_POLICY.md) - Normal routing behavior, lane routing
+- [CHEF_CONTRACTS.md](CHEF_CONTRACTS.md) - Contract definitions (light/mini/full variants)
 - [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md) - Review format
-- `.claude/agents/` - Individual chef fallback_behavior
+- `.claude/agents/` - Individual chef fallback_behavior and tier_behavior

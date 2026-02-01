@@ -1,9 +1,45 @@
 ---
 chef_id: sous_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - monitor
+
+tier_behavior:
+  activation_tiers: [0, 1, 2, 3, 4]  # Monitors all tiers
+  depth_by_tier:
+    tier_0: passive
+    tier_1: passive
+    tier_2: active
+    tier_3: active
+    tier_4: active_with_alerts
+
+lane_participation:
+  green:
+    active: passive
+    depth: passive
+    requirements:
+      - change_monitoring: background
+      - drift_detection: skip
+      - proactive_suggestions: skip
+  amber:
+    active: passive
+    depth: passive
+    requirements:
+      - change_monitoring: background
+      - drift_detection: on_request
+      - proactive_suggestions: on_request
+  red:
+    active: true
+    depth: active
+    requirements:
+      - change_monitoring: active
+      - drift_detection: automatic
+      - proactive_suggestions: automatic
+    tier_4_additions:
+      - compliance_monitoring: required
+      - alert_on_deviation: true
+      - post_mortem_tracking: required
 
 input_contract:
   requires_from: null

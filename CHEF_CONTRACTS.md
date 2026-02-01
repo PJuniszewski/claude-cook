@@ -1,8 +1,8 @@
-# Chef-to-Chef Contracts v1.0
+# Chef-to-Chef Contracts v1.1
 
 Explicit handoff contracts defining what each chef must deliver to the next chef in the workflow.
 
-**Purpose:** Define "what is passed to whom" - structured outputs that enable downstream chefs to function correctly.
+**Purpose:** Define "what is passed to whom" - structured outputs that enable downstream chefs to function correctly. Now with **lane-specific contract variants**.
 
 ---
 
@@ -13,11 +13,226 @@ Each chef operates within a bounded context. For the overall workflow to succeed
 1. **Upstream chef** must provide specific outputs (output_contract)
 2. **Downstream chef** must receive specific inputs (input_contract)
 3. **Handoff validation** ensures nothing is lost between phases
+4. **Contract variant** depends on lane (light/mini/full)
 
 Without explicit contracts:
 - Chefs make assumptions about available context
 - Critical information is lost between phases
 - Failures occur late instead of early
+
+---
+
+## Contract Variants by Lane
+
+Different lanes require different levels of documentation:
+
+### light_v1 (Green Lane - Tier 0-1)
+
+Minimal contract for trivial/low-risk changes.
+
+```yaml
+light_v1:
+  lane: green
+  philosophy: "Just enough to track what happened"
+
+  required_fields:
+    - change_summary:
+        description: "1-2 sentence description of change"
+        format: "plain text"
+        max_length: 200
+
+    - files_modified:
+        description: "List of files changed"
+        format: "bullet list"
+        validation: "at least 1 file"
+
+    - why_safe:
+        description: "Brief justification for green lane"
+        format: "plain text"
+        examples:
+          - "Internal refactor, no API change"
+          - "Documentation update only"
+          - "Test additions, no production code"
+
+  optional_fields:
+    - test_case:
+        description: "Single test case if applicable"
+        format: "scenario: when X then Y"
+
+  handoff_validation: minimal
+  blocking_if_missing: false  # Green lane is lenient
+  fallback_action: proceed_with_warning
+```
+
+### mini_v1 (Amber Lane - Tier 2)
+
+Focused contract for medium-risk changes.
+
+```yaml
+mini_v1:
+  lane: amber
+  philosophy: "Enough to validate the approach"
+
+  required_fields:
+    - implementation_plan:
+        description: "Step-by-step implementation approach"
+        format: "numbered list"
+        validation: "at least 3 steps"
+
+    - files_to_modify:
+        description: "Files with planned changes"
+        format: "table: file | change | risk"
+        validation: "at least 1 file"
+
+    - risk_areas:
+        description: "Identified risk areas"
+        format: "bullet list with risk level"
+        validation: "at least 1 risk identified"
+
+    - test_cases:
+        description: "Test coverage for change"
+        format: "table: scenario | given | when | then"
+        validation: "at least 3 test cases"
+
+  optional_fields:
+    - alternatives:
+        description: "Brief alternatives considered"
+        format: "1-2 alternatives with why rejected"
+
+    - rollback_plan:
+        description: "How to revert if needed"
+
+  handoff_validation: standard
+  blocking_if_missing: true
+  fallback_action: request-changes
+```
+
+### full_v1 (Red Lane - Tier 3-4)
+
+Complete contract for high/critical-risk changes.
+
+```yaml
+full_v1:
+  lane: red
+  philosophy: "Comprehensive documentation and validation"
+
+  required_fields:
+    # Product scope (from product_chef)
+    - approved_scope:
+        description: "List of in-scope items"
+        format: "bullet list"
+        validation: "must not contain TBD"
+
+    - non_goals:
+        description: "Explicit list of what NOT to build"
+        format: "bullet list"
+        validation: "at least 1 item"
+
+    - success_metrics:
+        description: "How we measure success"
+        format: "bullet list with measurable criteria"
+        validation: "at least 1 metric"
+
+    # Architecture (from architect_chef)
+    - chosen_alternative:
+        description: "Selected approach with rationale"
+        format: "approach name + why selected"
+        validation: "not empty"
+
+    - trade_offs:
+        description: "Documented trade-offs"
+        format: "sacrificing/gaining/acceptable-because"
+        validation: "trade_offs documented"
+
+    - affected_modules:
+        description: "List of modules to modify"
+        format: "bullet list"
+        validation: "at least 1 module"
+
+    - risk_assessment:
+        description: "Overall risk level with mitigations"
+        format: "HIGH | MEDIUM | LOW + mitigations"
+        validation: "must include mitigation if HIGH"
+
+    # Implementation (from engineer_chef)
+    - implementation_plan:
+        description: "Step-by-step implementation"
+        format: "numbered list"
+        validation: "at least 5 steps"
+
+    - files_to_modify:
+        description: "Explicit file list"
+        format: "table: file | change | risk"
+        validation: "at least 1 file"
+
+    # Testing (from qa_chef)
+    - test_cases:
+        description: "Comprehensive test coverage"
+        format: "table: scenario | given | when | then"
+        validation: "at least 5 test cases"
+
+    - edge_cases:
+        description: "Edge cases to handle"
+        format: "bullet list"
+        validation: "at least 3 edge cases"
+
+    # Security (from security_chef)
+    - security_status:
+        description: "Security review status"
+        format: "reviewed: yes/no, risk_level: low/medium/high"
+        validation: "must be reviewed"
+
+    - threat_assessment:
+        description: "Threat analysis"
+        format: "assets, actors, vectors, mitigations"
+        validation: "required for tier 3+"
+
+  # Tier 4 additions
+  tier_4_additions:
+    - human_approval:
+        description: "Human approval record"
+        format: "approver, timestamp, approval_type"
+        validation: "required before implementation"
+
+    - compliance_checklist:
+        description: "Compliance requirements met"
+        format: "checklist"
+        validation: "all items checked"
+
+    - rollback_plan:
+        description: "Detailed rollback procedure"
+        format: "numbered steps"
+        validation: "must be testable"
+
+    - incident_response:
+        description: "What to do if it goes wrong"
+        format: "escalation path, contacts"
+
+  handoff_validation: strict
+  blocking_if_missing: true
+  fallback_action: block
+```
+
+---
+
+## Contract Selection by Lane
+
+```yaml
+contract_selection:
+  algorithm: |
+    1. Determine lane from risk tier
+    2. Select contract variant:
+       - Green (tier 0-1) → light_v1
+       - Amber (tier 2) → mini_v1
+       - Red (tier 3-4) → full_v1
+    3. If tier 4, add tier_4_additions to full_v1
+    4. Apply contract to all handoffs in workflow
+
+  upgrade_on_transition:
+    # If lane upgrades mid-cook, contract upgrades too
+    green_to_amber: "Upgrade existing light_v1 fields + add mini_v1 fields"
+    amber_to_red: "Upgrade existing mini_v1 fields + add full_v1 fields"
+```
 
 ---
 
@@ -325,7 +540,8 @@ compatible_with:
 
 ## See Also
 
-- [ROUTER_POLICY.md](ROUTER_POLICY.md) - Chef routing and escalation
+- [RISK_TIERS.md](RISK_TIERS.md) - Risk tier definitions and lane assignment
+- [ROUTER_POLICY.md](ROUTER_POLICY.md) - Chef routing, escalation, and lane routing
 - [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md) - Review output format
 - [FALLBACK_POLICY.md](FALLBACK_POLICY.md) - What happens when contracts fail
-- `.claude/agents/` - Individual chef definitions with contracts
+- `.claude/agents/` - Individual chef definitions with contracts and tier_behavior

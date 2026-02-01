@@ -1,9 +1,42 @@
 ---
 chef_id: engineer_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - plan
+
+tier_behavior:
+  activation_tiers: [0, 1, 2, 3, 4]  # Active in all tiers
+  depth_by_tier:
+    tier_0: shallow
+    tier_1: shallow
+    tier_2: standard
+    tier_3: full
+    tier_4: full
+
+lane_participation:
+  green:
+    active: true
+    depth: shallow
+    requirements:
+      - files_to_modify: required
+      - implementation_plan: optional (brief)
+      - alternatives: skip
+  amber:
+    active: true
+    depth: standard
+    requirements:
+      - files_to_modify: required
+      - implementation_plan: required (3+ steps)
+      - alternatives: 1 alternative
+  red:
+    active: true
+    depth: full
+    requirements:
+      - files_to_modify: required (with risk column)
+      - implementation_plan: required (5+ steps)
+      - alternatives: 2+ alternatives
+      - diagram: required for 5+ files
 
 input_contract:
   requires_from: architect_chef

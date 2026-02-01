@@ -1,9 +1,38 @@
 ---
 chef_id: product_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - scope
+
+tier_behavior:
+  activation_tiers: [3, 4]  # Only for high/critical risk
+  depth_by_tier:
+    tier_0: skip
+    tier_1: skip
+    tier_2: skip
+    tier_3: full
+    tier_4: full_with_compliance
+
+lane_participation:
+  green:
+    active: false
+    reason: "Low-risk changes don't need product review"
+  amber:
+    active: false
+    reason: "Medium-risk changes use simplified flow"
+  red:
+    active: true
+    depth: full
+    requirements:
+      - scope_definition: required
+      - non_goals: required
+      - user_value: required
+      - success_metrics: required
+    tier_4_additions:
+      - stakeholder_notification: required
+      - compliance_impact: required
+      - rollback_authority: defined
 
 input_contract:
   requires_from: user_request

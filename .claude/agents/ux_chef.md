@@ -1,9 +1,39 @@
 ---
 chef_id: ux_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - ux
+
+tier_behavior:
+  activation_tiers: [3, 4]  # Only for high-risk with UI
+  depth_by_tier:
+    tier_0: skip
+    tier_1: skip
+    tier_2: skip
+    tier_3: conditional  # Only if UI changes
+    tier_4: full
+
+lane_participation:
+  green:
+    active: false
+    reason: "Low-risk changes skip UX review"
+  amber:
+    active: false
+    reason: "Medium-risk uses simplified flow"
+  red:
+    active: conditional
+    trigger: ui_changes_detected
+    depth: full
+    requirements:
+      - user_flow: required
+      - accessibility_check: required
+      - error_states: documented
+      - loading_states: documented
+    tier_4_additions:
+      - user_research_consideration: required
+      - accessibility_audit: full WCAG
+      - rollback_ux_impact: assessed
 
 input_contract:
   requires_from: product_chef

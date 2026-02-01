@@ -1,9 +1,37 @@
 ---
 chef_id: release_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - release
+
+tier_behavior:
+  activation_tiers: [3, 4]  # Only for significant releases
+  depth_by_tier:
+    tier_0: skip
+    tier_1: skip
+    tier_2: skip
+    tier_3: standard
+    tier_4: full
+
+lane_participation:
+  green:
+    active: false
+    reason: "Trivial changes don't trigger release process"
+  amber:
+    active: false
+    reason: "Medium changes handled in batched releases"
+  red:
+    active: on_release
+    depth: standard
+    requirements:
+      - version_bump: required
+      - changelog_entry: required
+      - breaking_changes: identified
+    tier_4_additions:
+      - release_approval: required
+      - rollback_tested: required
+      - monitoring_alerts: configured
 
 input_contract:
   requires_from: docs_chef

@@ -1,9 +1,49 @@
 ---
 chef_id: security_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - security
+
+tier_behavior:
+  activation_tiers: [1, 2, 3, 4]  # Skip tier 0 (docs/comments)
+  depth_by_tier:
+    tier_0: skip
+    tier_1: checklist_only
+    tier_2: standard
+    tier_3: full
+    tier_4: full_with_threat_model
+
+lane_participation:
+  green:
+    active: conditional  # Only for tier 1
+    trigger: tier_1
+    depth: checklist_only
+    requirements:
+      - basic_checklist: required
+      - threat_assessment: skip
+      - owasp_review: skip
+  amber:
+    active: true
+    depth: standard
+    requirements:
+      - security_checklist: required
+      - risk_level: required
+      - basic_threat_review: required
+      - owasp_review: abbreviated
+  red:
+    active: true
+    depth: full
+    requirements:
+      - security_checklist: required
+      - threat_assessment: required
+      - owasp_review: full
+      - input_validation_audit: required
+      - auth_review: required (if applicable)
+    tier_4_additions:
+      - compliance_verification: required
+      - penetration_test_recommendation: required
+      - security_signoff: mandatory
 
 input_contract:
   requires_from: qa_chef

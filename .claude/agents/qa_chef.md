@@ -1,9 +1,49 @@
 ---
 chef_id: qa_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - test
+
+tier_behavior:
+  activation_tiers: [0, 1, 2, 3, 4]  # Active in all tiers
+  depth_by_tier:
+    tier_0: shallow
+    tier_1: shallow
+    tier_2: standard
+    tier_3: full
+    tier_4: full_with_regression
+
+lane_participation:
+  green:
+    active: true
+    depth: shallow
+    requirements:
+      min_test_cases: 1
+      edge_cases: optional
+      acceptance_criteria: 1 criterion
+      regression_checks: skip
+  amber:
+    active: true
+    depth: standard
+    requirements:
+      min_test_cases: 3
+      edge_cases: required (2+)
+      acceptance_criteria: 3 criteria
+      regression_checks: quick check
+  red:
+    active: true
+    depth: full
+    requirements:
+      min_test_cases: 5
+      edge_cases: required (3+)
+      acceptance_criteria: comprehensive
+      regression_checks: full suite
+      integration_tests: required
+    tier_4_additions:
+      - load_testing_consideration: required
+      - rollback_test: required
+      - monitoring_verification: required
 
 input_contract:
   requires_from: engineer_chef

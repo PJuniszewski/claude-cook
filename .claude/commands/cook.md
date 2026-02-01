@@ -65,7 +65,20 @@ Optional flags:
 /cook <feature description> --well-done
 /cook <feature description> --microwave
 /cook <feature description> --instruction=<file.md>
+/cook <feature description> --tier=N        # Force specific tier (0-4)
+/cook <feature description> --force-green   # Request green lane (may auto-upgrade)
+/cook <feature description> --sensitive     # Bump to minimum tier 3
 ```
+
+### Flag Reference
+
+| Flag | Effect | Use Case |
+|------|--------|----------|
+| `--well-done` | Auto-detect tier, use appropriate lane | Default for significant changes |
+| `--microwave` | Prefer green lane, auto-upgrade if sensitive | Quick fixes, small changes |
+| `--tier=N` | Force specific tier (0-4) | Override auto-classification |
+| `--force-green` | Request green lane processing | When confident change is low-risk |
+| `--sensitive` | Force minimum tier 3 (Red lane) | When you know it's sensitive |
 
 ---
 
@@ -240,6 +253,52 @@ _Pending..._
 
 ## Policy Alignment Risk
 _Pending..._
+
+---
+
+# Step 0.5 - Risk Classification
+
+**This step determines the lane (Green/Amber/Red) based on risk tier.**
+
+## Classification Signals
+
+### Path Analysis
+| Pattern Matched | Tier Indicated |
+|-----------------|----------------|
+| | |
+
+### Keyword Analysis
+| Keyword Found | Tier Indicated |
+|---------------|----------------|
+| | |
+
+### Size Analysis
+- Lines of code: _Pending..._
+- Files affected: _Pending..._
+- New files in sensitive dirs: _Pending..._
+
+## Computed Risk Tier
+_Pending... (0-4)_
+
+## Lane Assignment
+_Pending... (Green/Amber/Red)_
+
+## Contract Variant
+_Pending... (light_v1/mini_v1/full_v1)_
+
+## Active Chefs for This Lane
+| Chef | Active | Depth |
+|------|--------|-------|
+| product_chef | _Pending_ | _Pending_ |
+| ux_chef | _Pending_ | _Pending_ |
+| architect_chef | _Pending_ | _Pending_ |
+| engineer_chef | _Pending_ | _Pending_ |
+| qa_chef | _Pending_ | _Pending_ |
+| security_chef | _Pending_ | _Pending_ |
+| docs_chef | _Pending_ | _Pending_ |
+
+## Override Applied
+_None / --tier=N / --force-green / --sensitive_
 
 ---
 
@@ -420,13 +479,57 @@ _Pending..._
 
 **CRITICAL:** Do NOT proceed to Step 2 until artifact file exists.
 
+### Step 1.5: Risk Classification (NEW)
+
+Before executing cooking phases, classify the risk:
+
+1. **Analyze the feature request** against classification signals:
+   - Path patterns (auth/, payments/, schema/, etc.)
+   - Keywords (password, token, migration, etc.)
+   - Size estimates (files/LOC)
+
+2. **Compute risk tier** (0-4):
+   - Tier 0: Trivial (docs, comments)
+   - Tier 1: Low (internal refactor, tests)
+   - Tier 2: Medium (compatible API, business logic)
+   - Tier 3: High (auth, PII, schema, payments)
+   - Tier 4: Critical (identity, compliance, mass ops)
+
+3. **Assign lane**:
+   - Green (Tier 0-1): Minimal ceremony, engineer + qa only
+   - Amber (Tier 2): Focused review, + security + conditional architect
+   - Red (Tier 3-4): Full governance, all chefs, Tier 4 needs human approval
+
+4. **Select contract variant**:
+   - Green → light_v1
+   - Amber → mini_v1
+   - Red → full_v1
+
+5. **Update artifact** with classification results
+
+6. **Check for flag overrides**:
+   - `--tier=N`: Use specified tier (cannot downgrade from 3-4)
+   - `--force-green`: Attempt green (auto-upgrades if sensitive)
+   - `--sensitive`: Bump to minimum tier 3
+   - `--microwave`: Prefer green, auto-upgrade if needed
+
+See [RISK_TIERS.md](../../RISK_TIERS.md) for full classification algorithm.
+
 ### Step 2: Execute cooking phases
 
-Only AFTER artifact exists:
-1. Run each cooking phase
+Only AFTER artifact exists AND risk classification complete:
+1. Run cooking phases **appropriate for the assigned lane**
 2. **CRITICAL: Read the chef file BEFORE each phase** (see Chef Loading below)
 3. Update artifact after EACH phase
 4. Clearly label each cooking phase in output
+
+**Lane-specific phase execution:**
+
+| Lane | Phases to Execute |
+|------|-------------------|
+| Green | Step 1, Step 4 (shallow), Step 5 (1 test), Step 6 (checklist if tier 1) |
+| Amber | Step 1, Step 4 (standard), Step 5 (3 tests), Step 6 (standard) |
+| Red | All steps: 1, 2, 3, 4, 5, 6, 7 (full depth) |
 
 #### Chef Loading (MANDATORY) - Operational Layer
 
@@ -498,13 +601,16 @@ TaskUpdate({ taskId: task_id_1, addBlockedBy: [task_id_0] })
 | Cook Phase | Task Subject | blockedBy |
 |------------|--------------|-----------|
 | Phase 0 | `[cook] Phase 0: Scan project context` | (none) |
-| Step 1 | `[cook] Step 1: Analyze feature request` | Phase 0 |
-| Step 2 | `[cook] Step 2: Product review` | Step 1 |
-| Step 3 | `[cook] Step 3: UX review` | Step 2 |
-| Step 4 | `[cook] Step 4: Implementation plan` | Step 3 |
+| Step 0.5 | `[cook] Step 0.5: Risk classification` | Phase 0 |
+| Step 1 | `[cook] Step 1: Analyze feature request` | Step 0.5 |
+| Step 2 | `[cook] Step 2: Product review` | Step 1 (Red lane only) |
+| Step 3 | `[cook] Step 3: UX review` | Step 2 (Red lane + UI changes) |
+| Step 4 | `[cook] Step 4: Implementation plan` | Step 3 or Step 1 |
 | Step 5 | `[cook] Step 5: QA review` | Step 4 |
 | Step 6 | `[cook] Step 6: Security review` | Step 5 |
-| Step 7 | `[cook] Step 7: Documentation` | Step 6 |
+| Step 7 | `[cook] Step 7: Documentation` | Step 6 (Red lane only) |
+
+**Note:** Steps 2, 3, and 7 are skipped for Green/Amber lanes. Dependencies adjust accordingly.
 
 ### Task Updates
 
@@ -513,12 +619,27 @@ As each phase completes:
 2. Next phase automatically unblocked
 3. Update artifact with phase results
 
-### Microwave Mode Tasks
+### Lane-Based Tasks
 
-For `--microwave`, create only:
+Tasks created depend on the assigned lane:
+
+**Green Lane (Tier 0-1):**
+- Step 0.5: Risk classification
 - Step 1: Analyze feature
-- Step 4: Implementation plan
-- Step 5: QA review (1-2 tests)
+- Step 4: Implementation plan (shallow)
+- Step 5: QA review (1 test)
+- Step 6: Security checklist (tier 1 only)
+
+**Amber Lane (Tier 2):**
+- Step 0.5: Risk classification
+- Step 1: Analyze feature
+- Step 4: Implementation plan (standard)
+- Step 5: QA review (3 tests)
+- Step 6: Security review (standard)
+
+**Red Lane (Tier 3-4):**
+- All tasks: Phase 0 through Step 7
+- Tier 4 adds: Human approval checkpoint
 
 ### Graceful Degradation
 

@@ -1,9 +1,43 @@
 ---
 chef_id: sanitation_inspector_chef
-version: 2.0.0
+version: 2.1.0
 
 phase_affinity:
   - inspect
+
+tier_behavior:
+  activation_tiers: [2, 3, 4]  # Medium risk and above
+  depth_by_tier:
+    tier_0: skip
+    tier_1: skip
+    tier_2: quick_scan
+    tier_3: full
+    tier_4: full_with_audit
+
+lane_participation:
+  green:
+    active: false
+    reason: "Low-risk changes skip post-implementation review"
+  amber:
+    active: optional
+    trigger: on_request OR pr_merge
+    depth: quick_scan
+    requirements:
+      - hygiene_check: basic
+      - recipe_compliance: quick
+      - safety_inspection: skip
+  red:
+    active: true
+    trigger: automatic
+    depth: full
+    requirements:
+      - hygiene_check: full
+      - recipe_compliance: full
+      - safety_inspection: full
+    tier_4_additions:
+      - compliance_audit: required
+      - security_deep_dive: required
+      - post_mortem_scheduled: required
 
 input_contract:
   requires_from: any_chef
