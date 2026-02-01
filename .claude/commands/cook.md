@@ -381,8 +381,29 @@ _Pending..._
 
 Only AFTER artifact exists:
 1. Run each cooking phase
-2. Update artifact after EACH phase
-3. Clearly label each cooking phase in output
+2. **CRITICAL: Read the chef file BEFORE each phase** (see Chef Loading below)
+3. Update artifact after EACH phase
+4. Clearly label each cooking phase in output
+
+#### Chef Loading (MANDATORY)
+
+Before executing each step, **READ the corresponding chef file** to load its rules into context:
+
+| Step | Chef to Load | Command |
+|------|--------------|---------|
+| Step 2 (Product) | product_chef | `Read(.claude/agents/product_chef.md)` |
+| Step 3 (UX) | ux_chef | `Read(.claude/agents/ux_chef.md)` |
+| Step 4 (Plan) | architect_chef + engineer_chef | `Read(.claude/agents/architect_chef.md)` then `Read(.claude/agents/engineer_chef.md)` |
+| Step 5 (QA) | qa_chef | `Read(.claude/agents/qa_chef.md)` |
+| Step 6 (Security) | security_chef | `Read(.claude/agents/security_chef.md)` |
+| Step 7 (Docs) | docs_chef | `Read(.claude/agents/docs_chef.md)` |
+
+**Why this matters:** Chef files contain `non_negotiables`, `rubric`, and `output_contract` that MUST be applied. Without reading them, you're cooking blind.
+
+After reading, apply:
+- `non_negotiables` - rules that cannot be violated
+- `rubric.ready_for_merge` - checklist that must pass
+- `output_contract` - review format (review_v1)
 
 ### Step 3: Finalize
 
