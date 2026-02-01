@@ -115,7 +115,7 @@ Uses `review_v1` format (see [REVIEW_CONTRACT.md](../../REVIEW_CONTRACT.md)).
 #### Addenda: Trade-offs
 - Sacrificing: Operational simplicity
 - Gaining: Independent scaling
-- Acceptable because: Team has k8s experience
+- Acceptable because: Growth projections justify complexity
 ```
 
 ## Artifacts
