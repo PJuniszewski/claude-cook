@@ -101,7 +101,7 @@ Uses `review_v1` format (see [REVIEW_CONTRACT.md](../../REVIEW_CONTRACT.md)).
 **verdict:** approve
 **must_fix:** (none)
 **should_fix:**
-- Consider connection pooling for database layer
+- Consider caching for frequently accessed data
 **questions:** (none)
 **risks:**
 - [LOW] Minor latency increase under high load
@@ -109,13 +109,13 @@ Uses `review_v1` format (see [REVIEW_CONTRACT.md](../../REVIEW_CONTRACT.md)).
 
 ---
 #### Addenda: Alternatives Considered
-1. **Monolithic approach** - Rejected (scaling issues)
-2. **Microservices** (selected) - Better isolation
+1. **Option A** - Rejected (maintainability concerns)
+2. **Option B** (selected) - Better separation of concerns
 
 #### Addenda: Trade-offs
-- Sacrificing: Operational simplicity
-- Gaining: Independent scaling
-- Acceptable because: Growth projections justify complexity
+- Sacrificing: Initial simplicity
+- Gaining: Long-term flexibility
+- Acceptable because: Requirements indicate future extensibility needs
 ```
 
 ## Artifacts

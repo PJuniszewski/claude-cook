@@ -112,29 +112,29 @@ Uses `review_v1` format (see [REVIEW_CONTRACT.md](../../REVIEW_CONTRACT.md)).
 **verdict:** approve
 **must_fix:** (none)
 **should_fix:**
-- Add boundary test for max cart items
+- Add boundary test for max input length
 **questions:** (none)
 **risks:**
-- [MEDIUM] Integration with legacy API needs manual verification
+- [MEDIUM] External service integration needs manual verification
 **next_step:** proceed to security_chef
 
 ---
 #### Addenda: Test Cases
 
-1. **Happy path**: User creates order with valid items
-2. **Edge case**: Empty cart submission returns error
-3. **Boundary**: Max 100 items in cart
+1. **Happy path**: Operation completes with valid input
+2. **Edge case**: Empty input returns appropriate error
+3. **Boundary**: Max allowed value handled correctly
 
 #### Addenda: Edge Cases
 
-- Concurrent cart modifications
-- Session expiry during checkout
-- Invalid coupon code
+- Concurrent modifications
+- Session/token expiry mid-operation
+- Invalid configuration
 
 #### Addenda: Acceptance Criteria
 
-- [ ] Given valid cart, when user clicks checkout, then order is created
-- [ ] Given empty cart, when user clicks checkout, then error is shown
+- [ ] Given valid input, when action triggered, then expected result occurs
+- [ ] Given invalid input, when action triggered, then error is shown
 ```
 
 ## Test Categories

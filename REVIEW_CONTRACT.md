@@ -178,14 +178,14 @@ For tooling and automation:
 - Add boundary test for max value
 **questions:** (none)
 **risks:**
-- [MEDIUM] Integration with legacy API untested
+- [MEDIUM] External integration needs manual verification
 **next_step:** proceed to security_chef
 
 ---
 #### Addenda: Test Cases
-1. Happy path: User creates order successfully
-2. Edge case: Empty cart submission
-3. Boundary: Max 100 items in cart
+1. Happy path: Operation completes successfully
+2. Edge case: Empty input handled
+3. Boundary: Max allowed value
 ```
 
 ---
