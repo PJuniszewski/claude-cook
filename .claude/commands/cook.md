@@ -241,6 +241,75 @@ _Pending..._
 ## Policy Alignment Risk
 _Pending..._
 
+## Historical Insights (Memory System)
+
+**After loading context, query the memory system for similar features.**
+
+If `ENABLE_COOK_MEMORY` is true (default), call the memory retrieval system:
+
+```javascript
+const memoryRetrieval = require('./scripts/lib/memoryRetrieval');
+
+// Extract current feature context
+const currentFeature = {
+  description: <feature_description>,
+  files: <affected_files_if_known>,
+  keywords: <extracted_keywords>
+};
+
+// Query similar features
+try {
+  const similarFeatures = memoryRetrieval.querySimilarFeatures(currentFeature, 0.3, 5);
+
+  if (similarFeatures.length > 0) {
+    // Get phase-agnostic insights
+    const phaseInsights = memoryRetrieval.getInsightsForPhase('scope', currentFeature);
+
+    // Format for artifact
+    const insightsMarkdown = memoryRetrieval.formatInsightsForArtifact(
+      similarFeatures,
+      phaseInsights
+    );
+
+    // Inject into Phase 0 section of artifact
+    // Show: similar features count, recurring issues, phase warnings
+  }
+} catch (error) {
+  // Graceful degradation: log warning, continue without insights
+  console.warn('Memory retrieval failed:', error.message);
+}
+```
+
+**Output format** (if similar features found):
+
+```markdown
+## 📊 Historical Insights
+
+Found 3 similar feature(s) in history:
+
+- **auth-oauth-integration** (85% similar)
+  - Blocked 1 time(s)
+  - Escalated 2 time(s)
+  - 1 phase(s) blocked
+
+- **user-authentication-system** (72% similar)
+  - Blocked 2 time(s)
+  - 2 phase(s) blocked
+
+- **password-reset-feature** (68% similar)
+  - Escalated 1 time(s)
+
+### Patterns to Consider:
+
+- ⚠️ Phase 'security' blocks 40.0% of similar features
+- 🔁 Recurring issue: input_validation (5 occurrences)
+- Consider pre-review: engineer_chef frequently escalates to architect_chef
+```
+
+**If no similar features or memory disabled:**
+- Skip this section silently
+- Proceed to Step 1 without historical context
+
 ---
 
 # Step 1 - Read the Order
