@@ -499,6 +499,27 @@ _Pending..._
 | Date | Phase | Decision | Rationale |
 |------|-------|----------|-----------|
 | <today> | Step 0.0 | Artifact created | Starting cook flow |
+
+---
+
+# Memory Feedback
+
+**If historical insights were shown, collect feedback to improve suggestion quality.**
+
+Rate the usefulness of insights provided in Phase 0:
+
+- [ ] **Helpful** - Insights were relevant and informed decisions
+- [ ] **Not helpful** - Insights were present but not useful
+- [ ] **Wrong** - Insights were misleading or incorrect
+
+**For each insight marked "Wrong", explain why:**
+
+```
+Insight: "⚠️ Phase 'security' blocks 40% of similar features"
+Why wrong: Our feature is significantly simpler than historical cases
+```
+
+**Feedback is logged** to `.claude/data/memory-feedback.jsonl` for continuous improvement.
 ```
 
 **CRITICAL:** Do NOT proceed to Step 2 until artifact file exists.
