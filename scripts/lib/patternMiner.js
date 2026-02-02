@@ -300,6 +300,90 @@ function generateReport() {
   };
 }
 
+/**
+ * Find similar features based on metadata
+ * Used by memory retrieval to identify relevant historical patterns
+ *
+ * @param {Object} currentFeature - Current feature metadata
+ * @param {number} minMatches - Minimum number of matching attributes
+ * @returns {Array} Similar order IDs with match scores
+ */
+function findSimilarFeatures(currentFeature, minMatches = 1) {
+  const entries = auditLogger.getAllAuditEntries();
+  const orderIds = auditLogger.getOrderIds();
+
+  const similarities = [];
+
+  for (const orderId of orderIds) {
+    const orderEntries = entries.filter((e) => e.order_id === orderId);
+    let matchScore = 0;
+    const matches = [];
+
+    // Check for file overlap in metadata
+    if (currentFeature.files && currentFeature.files.length > 0) {
+      const orderFiles = [];
+      for (const entry of orderEntries) {
+        if (entry.metadata && entry.metadata.files_to_modify) {
+          orderFiles.push(...entry.metadata.files_to_modify);
+        }
+      }
+
+      const fileOverlap = currentFeature.files.filter((f) =>
+        orderFiles.some((of) => of.includes(f) || f.includes(of))
+      );
+
+      if (fileOverlap.length > 0) {
+        matchScore += fileOverlap.length;
+        matches.push({ type: "file_overlap", count: fileOverlap.length });
+      }
+    }
+
+    // Check for keyword matches in descriptions
+    if (currentFeature.keywords && currentFeature.keywords.length > 0) {
+      const orderDescriptions = orderEntries
+        .filter((e) => e.metadata && e.metadata.feature_description)
+        .map((e) => e.metadata.feature_description.toLowerCase())
+        .join(" ");
+
+      const keywordMatches = currentFeature.keywords.filter((keyword) =>
+        orderDescriptions.includes(keyword.toLowerCase())
+      );
+
+      if (keywordMatches.length > 0) {
+        matchScore += keywordMatches.length;
+        matches.push({ type: "keyword_match", count: keywordMatches.length });
+      }
+    }
+
+    // Check for phase pattern similarity
+    const currentPhases = currentFeature.phases || [];
+    const orderPhases = [
+      ...new Set(orderEntries.filter((e) => e.phase).map((e) => e.phase)),
+    ];
+
+    if (currentPhases.length > 0) {
+      const phaseOverlap = currentPhases.filter((p) =>
+        orderPhases.includes(p)
+      );
+      if (phaseOverlap.length > 0) {
+        matchScore += phaseOverlap.length * 0.5; // Lower weight
+        matches.push({ type: "phase_overlap", count: phaseOverlap.length });
+      }
+    }
+
+    if (matchScore >= minMatches) {
+      similarities.push({
+        order_id: orderId,
+        match_score: matchScore,
+        matches: matches,
+        entries: orderEntries,
+      });
+    }
+  }
+
+  return similarities.sort((a, b) => b.match_score - a.match_score);
+}
+
 module.exports = {
   findRecurringBlockers,
   findEscalationPatterns,
@@ -307,6 +391,7 @@ module.exports = {
   findPredictionAccuracy,
   suggestImprovements,
   generateReport,
+  findSimilarFeatures,
 };
 
 // CLI usage
@@ -333,9 +418,15 @@ if (require.main === module) {
     case "report":
       console.log(JSON.stringify(generateReport(), null, 2));
       break;
+    case "similar":
+      const files = args[1] ? args[1].split(",") : [];
+      const keywords = args[2] ? args[2].split(",") : [];
+      const feature = { files, keywords };
+      console.log(JSON.stringify(findSimilarFeatures(feature), null, 2));
+      break;
     default:
       console.log(
-        "Usage: patternMiner.js [blockers|escalations|phases|accuracy|suggest|report]"
+        "Usage: patternMiner.js [blockers|escalations|phases|accuracy|suggest|report|similar <files> <keywords>]"
       );
   }
 }
