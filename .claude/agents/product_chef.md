@@ -12,6 +12,7 @@ input_contract:
   optional_fields:
     - context
     - constraints
+    - historical_context  # Recurring patterns from similar features (memory system)
 
 output_contract:
   format: review_v1
@@ -113,6 +114,23 @@ Evaluates feature scope, validates user value, and makes approve/reject/defer de
 3. **Priority**: Should this be done now, or deferred?
 4. **Dependencies**: Are there prerequisites that must be completed first?
 5. **Measurability**: How will we know if this feature succeeded?
+
+## Historical Context (Memory System)
+
+If provided, `historical_context` contains patterns from similar features:
+
+```
+🔁 Recurring issue: scope_creep (4 occurrences in similar features)
+⚠️ Phase 'scope' typically requires 2 clarification rounds
+```
+
+**How to use:**
+- Consider recurring issues when evaluating scope
+- Anticipate common blockers from historical patterns
+- Reference patterns in verdict rationale ("Aware of scope_creep pattern, limited to core feature only")
+- If pattern contradicts current assessment, note why ("Pattern shows scope_creep, but this request is well-bounded")
+
+**Not prescriptive:** Historical context informs, doesn't dictate. Your judgment overrides patterns.
 
 ## Blockers
 
