@@ -83,15 +83,29 @@ Before executing any step, consult `ROUTER_POLICY.md` for:
 ```
 For each cooking phase:
 1. Load ROUTER_POLICY.md phase_routing for current phase
-2. For each chef in phase:
+
+2. Check historical bottlenecks (if ENABLE_COOK_MEMORY=true):
+   const phaseStats = patternMiner.findPhaseStatistics();
+   const currentPhaseStats = phaseStats.find(s => s.phase === currentPhase);
+
+   if (currentPhaseStats && currentPhaseStats.block_rate > 30) {
+     // Inject warning into artifact
+     ⚠️ Phase '${currentPhase}' blocks ${block_rate}% of similar features
+   }
+
+3. For each chef in phase:
    a. Load chef contract from .claude/agents/
    b. Execute chef review
    c. Check for escalation triggers in chef output
    d. If escalation needed → route to target chef
-3. Collect all verdicts
-4. Apply conflict resolution if multiple verdicts
-5. Record final verdict in artifact
-6. Proceed or block based on verdict
+
+4. Collect all verdicts
+
+5. Apply conflict resolution if multiple verdicts
+
+6. Record final verdict in artifact
+
+7. Proceed or block based on verdict
 ```
 
 ---
