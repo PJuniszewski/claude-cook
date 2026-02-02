@@ -1,6 +1,6 @@
 ---
 description: Analytics and insights for cook artifacts. View stats, search, find similar.
-argument-hint: [search <query> | similar <files> | timeline] [--since DATE] [--json]
+argument-hint: [search <query> | similar <files> | timeline | memory-query <query>] [--since DATE] [--json]
 allowed-tools: Bash, Read, Glob
 ---
 
@@ -24,6 +24,7 @@ It helps you:
 /cook-stats search <query>            Search artifacts by keyword
 /cook-stats similar <file1> <file2>   Find artifacts touching similar files
 /cook-stats timeline                  Show recent activity
+/cook-stats memory-query <query>      Query memory system for patterns
 ```
 
 ## Options
@@ -96,6 +97,58 @@ Show recent activity across all artifacts.
 Shows:
 - Artifact creation dates
 - Key decisions made
+
+### memory-query
+
+Query the memory system for patterns from similar features.
+
+```
+/cook-stats memory-query "authentication"
+/cook-stats memory-query --files src/auth.ts,src/login.ts
+/cook-stats memory-query --keywords auth,login,oauth
+```
+
+**Queries audit log for:**
+- Similar features by files touched or keywords
+- Recurring blockers in matching features
+- Phase statistics for similar work
+- Escalation patterns
+
+**Output includes:**
+- List of similar order IDs with similarity scores
+- Recurring issues found (🔁)
+- Phase warnings (⚠️)
+- Suggested preparations
+
+**Use this to:**
+- Preview what insights `/cook` would show for a feature
+- Manually query historical patterns before starting work
+- Test memory system similarity matching
+- Debug why certain insights are/aren't shown
+
+**Example:**
+
+```
+/cook-stats memory-query "Add OAuth login"
+
+📊 Memory Query Results
+
+Similar features found: 3
+
+1. auth-oauth-integration (85% similarity)
+   - Files: src/auth/oauth.ts, src/login.ts
+   - Blocked 1 time: input_validation
+   - Escalated to: security_chef
+
+2. user-authentication-system (72% similarity)
+   - Files: src/auth/*, src/session.ts
+   - Blocked 2 times: security_review, test_coverage
+
+Patterns to consider:
+- 🔁 Recurring issue: input_validation (3 occurrences)
+- ⚠️ Phase 'security' blocks 66% of similar features
+- Consider pre-security review
+```
 
 ## Example Output
 
