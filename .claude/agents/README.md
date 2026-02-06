@@ -17,6 +17,7 @@ During cooking, Claude Code consults different agents based on their `phase_affi
 | docs | docs_chef | Identifies documentation updates |
 | release | release_chef | Manages versioning and changelog |
 | inspect | sanitation_inspector_chef | Post-implementation review |
+| refine | restaurateur_chef | Code refinement, optimization, naming, dead code, complexity |
 | monitor | sous_chef | Background monitoring |
 
 ## Output Contract
@@ -104,4 +105,5 @@ Uses `review_v1` format (see REVIEW_CONTRACT.md).
 | docs_chef | docs | `docs_chef.md` |
 | release_chef | release | `release_chef.md` |
 | sanitation_inspector_chef | inspect | `sanitation_inspector_chef.md` |
+| restaurateur_chef | refine | `restaurateur_chef.md` |
 | sous_chef | monitor | `sous_chef.md` |

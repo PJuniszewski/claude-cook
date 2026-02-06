@@ -15,6 +15,7 @@ Quick reference for who does what in the `/cook` workflow.
 | Docs Chef | docs | Documentation updates, usage examples |
 | Release Chef | release | Versioning, changelog, release notes |
 | Sanitation Inspector | inspect | Code hygiene, plan compliance, quality review |
+| Restaurateur Chef | refine | Code refinement, optimization, naming, dead code, complexity |
 | Sous Chef | monitor | Background monitoring, drift detection |
 
 **All chefs output reviews in `review_v1` format.** See [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md).
@@ -151,6 +152,28 @@ Quick reference for who does what in the `/cook` workflow.
 
 ---
 
+### Restaurateur Chef
+
+| Attribute | Value |
+|-----------|-------|
+| **Phase** | Post-cooking (after implementation, on-demand) |
+| **Mode** | On demand |
+| **Inputs** | Cook artifact, implementation, git diff, target files |
+| **Outputs** | Refinement report, quality score, improvement suggestions |
+| **Stop conditions** | Refinement suggests architectural change, naming needs project-wide decision |
+| **Pitfalls** | Over-suggesting, flagging generated/vendored code, false positives on dynamic dispatch |
+
+**Review Dimensions (8):**
+- Optimization, Simplification, Boilerplate Reduction, Naming, Pattern Cleanliness
+- Dead Code Detection, Complexity Scoring, Magic Value Detection
+
+**Parallel Agents:**
+- Code Structure Agent (dead code, complexity, simplification)
+- Naming & Constants Agent (naming, magic values)
+- Patterns & Optimization Agent (optimization, boilerplate, patterns)
+
+---
+
 ## Mode Participation
 
 | Chef | well-done | microwave |
@@ -164,6 +187,7 @@ Quick reference for who does what in the `/cook` workflow.
 | Docs Chef | Conditional | Skip (unless behavior change) |
 | Release Chef | On demand | On demand |
 | Sanitation Inspector | On demand + auto | On demand + auto |
+| Restaurateur Chef | On demand | On demand |
 
 ---
 
