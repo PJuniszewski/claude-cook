@@ -18,6 +18,7 @@ phase_routing:
   docs: [docs_chef]
   release: [release_chef]
   inspect: [sanitation_inspector_chef]
+  refine: [restaurateur_chef]
   monitor: [sous_chef]
 ```
 
@@ -33,6 +34,7 @@ phase_routing:
 | Step 7 | docs | docs_chef | Single |
 | Post-cook | release | release_chef | Single (on release) |
 | Post-cook | inspect | sanitation_inspector_chef | On-demand |
+| Post-cook | refine | restaurateur_chef | On-demand |
 | Background | monitor | sous_chef | Continuous |
 
 ---
@@ -51,6 +53,7 @@ escalation_priority:
   6: ux_chef          # User experience
   7: docs_chef        # Documentation
   8: release_chef     # Release decisions
+  9: restaurateur_chef # Refinement (advisory)
 ```
 
 ### Priority Rules
@@ -167,6 +170,18 @@ escalation_routes:
         target: product_chef
         reason: "Breaking change needs explicit approval"
 
+  restaurateur_chef:
+    escalates_to:
+      - condition: architectural_pattern_change
+        target: architect_chef
+        reason: "Refinement suggests architectural change"
+      - condition: naming_convention_conflict
+        target: engineer_chef
+        reason: "Naming suggestion conflicts with codebase conventions"
+      - condition: performance_concern
+        target: engineer_chef
+        reason: "Optimization may require performance testing"
+
   any_chef:
     escalates_to:
       - condition: security_vulnerability
@@ -205,6 +220,13 @@ phase_skip_rules:
       - no_behavior_change
       - no_api_change
     skip_verdict: "N/A - No documentation impact"
+
+  refine:
+    skip_when:
+      - not_requested
+      - generated_code_only
+      - vendored_code_only
+    skip_verdict: "N/A - Refinement invoked on-demand"
 
   release:
     skip_when:

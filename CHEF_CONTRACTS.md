@@ -241,6 +241,33 @@ handoff_to_inspector:
 
 ---
 
+## Contract: any_chef → restaurateur_chef
+
+```yaml
+handoff_to_restaurateur:
+  required_outputs:
+    - implementation_artifact:
+        description: "Path to cook artifact"
+        format: "file path"
+        validation: "file must exist"
+
+  optional_outputs:
+    - implementation_commits:
+        description: "Commits implementing the feature"
+        format: "list of commit SHAs"
+    - high_risk_files:
+        description: "Files flagged as high-risk"
+    - target_files:
+        description: "Specific files to review (narrows scope)"
+        format: "list of file paths"
+
+  blocking_if_missing: false
+  fallback_action: review_without_artifact
+  note: "Restaurateur can also run without artifact, reviewing files directly"
+```
+
+---
+
 ## Validation Rules
 
 ### Pre-Phase Validation

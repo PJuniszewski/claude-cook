@@ -124,6 +124,7 @@ See [COOK_CONTRACT.md](COOK_CONTRACT.md) for full contract.
 | docs_chef | Documentation updates | docs |
 | release_chef | Versioning, changelog | release |
 | sanitation_inspector_chef | Post-implementation review | inspect |
+| restaurateur_chef | Code refinement, optimization, naming | refine |
 | sous_chef | Background monitoring | monitor |
 
 All chefs output reviews using `review_v1` format. See [REVIEW_CONTRACT.md](REVIEW_CONTRACT.md).

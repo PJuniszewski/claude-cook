@@ -90,6 +90,7 @@ These are chef-specific and NOT required for orchestration.
 | security_chef | `threat_assessment`, `owasp_checklist` |
 | product_chef | `scope_definition`, `user_value` |
 | docs_chef | `files_to_update`, `migration_guide` |
+| restaurateur_chef | `optimization_opportunities`, `naming_improvements`, `boilerplate_reduction`, `simplification_suggestions`, `dead_code_report`, `complexity_scorecard`, `magic_values_found` |
 
 Addenda MUST be clearly separated:
 
